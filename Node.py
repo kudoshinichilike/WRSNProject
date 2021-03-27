@@ -46,6 +46,7 @@ class Node:
         self.avg_energy = self.check_point[-1]["avg_e"]
         self.used_energy = 0.0
 
+    #TODO: add charge by sensor
     def charge(self, mc):
         """
         charging to sensor
