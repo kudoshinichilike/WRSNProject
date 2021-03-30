@@ -3,6 +3,7 @@ from scipy.spatial import distance
 
 import Parameter as para
 from Node_Method import to_string, find_receiver, request_function, estimate_average_energy
+from Network_Method import get_all_path
 
 
 class Node:
@@ -24,6 +25,10 @@ class Node:
         self.is_active = is_active  # statement of sensor. If sensor dead, state is False
         self.is_request = False  # if node requested, is_request = True
         self.level = 0  # the distance from node to base
+        self.list_sensor_sensitive_effect = []  # List sensor energy receive per second form this node > used per second
+        self.weight_sensitive = 0
+        self.weight = 0
+        self.charging_time = 0
 
     def set_average_energy(self, func=estimate_average_energy):
         """
@@ -46,16 +51,31 @@ class Node:
         self.avg_energy = self.check_point[-1]["avg_e"]
         self.used_energy = 0.0
 
-    #TODO: add charge by sensor
     def charge(self, mc):
         """
         charging to sensor
         :param mc: mobile charger
         :return: the amount of energy mc charges to this sensor
         """
-        if self.energy <= self.energy_max - 10 ** -5 and mc.is_stand and self.is_active:
+        if self.energy <= self.energy_max - para.delta and mc.is_stand and self.is_active:
             d = distance.euclidean(self.location, mc.current)
             p_theory = para.alpha / (d + para.beta) ** 2
+            p_actual = min(self.energy_max - self.energy, p_theory)
+            self.energy = self.energy + p_actual
+            return p_actual
+        else:
+            return 0
+
+    def charge_by_sensor(self, sensor, time = 1):
+        """
+        charging to self by sensor
+        :param sensor: sensor charge to this
+        :param time: time charging to this
+        :return: the amount of energy mc charges to this sensor
+        """
+        if self.energy <= self.energy_max - para.delta:
+            d = distance.euclidean(self.location, sensor.location)
+            p_theory = (para.alpha / (d + para.beta) ** 2) * time
             p_actual = min(self.energy_max - self.energy, p_theory)
             self.energy = self.energy + p_actual
             return p_actual
@@ -133,3 +153,79 @@ class Node:
         :return:
         """
         func(self)
+
+    def get_percent_residual_energy(self):
+        if self.energy > self.energy_thresh:
+            return round((self.energy - self.energy_thresh) / self.energy_max * 100)
+
+        return 0
+
+    def get_percent_lack_energy(self):
+        if self.energy < self.energy_thresh:
+            return round((self.energy_thresh - self.energy) / self.energy_max * 100)
+
+        return 0
+
+    def get_lack_energy(self):
+        if self.energy < self.energy_thresh:
+            return self.energy_thresh - self.energy
+
+        return 0
+
+    def get_energy_max(self):
+        return self.energy_max
+
+    def get_percent_lack_sensitive_sensors(self):
+        sum_lack_energy = 0
+        sum_energy_max = 0
+        for sensor in self.list_sensor_sensitive_effect:
+            sum_lack_energy += sensor.get_lack_energy()
+            sum_energy_max += sensor.get_energy_max()
+
+        return round((sum_lack_energy - sum_energy_max) / self.energy_max * 100)
+
+    def get_weight(self, network):
+        self.weight = 0
+
+        all_path = get_all_path(network)
+        for path in all_path:
+            if self.id in path:
+                self.weight += 1
+
+        return self.weight
+
+    def update_weight(self, network):
+        """
+        calculate self.weight_sensitive, self.weight
+        :return:
+        """
+        self.get_weight(network)
+
+        self.weight_sensitive = 0
+        for sensitive_effect_sensor in self.list_sensor_sensitive_effect:
+            if sensitive_effect_sensor.is_lack_energy():
+                self.weight_sensitive += sensitive_effect_sensor.get_weight(network)
+
+    def is_lack_energy(self):
+        return self.energy < self.energy_thresh
+
+    def charge_to_another_sensor(self, time):
+        """
+        mc charge per second in network
+        :param time: time need to charge
+        :return:
+        """
+        for sensor in self.list_sensor_sensitive_effect:
+            charged_energy = sensor.charge_by_sensor(self, time)
+            self.energy -= charged_energy
+
+        self.charging_time -= time
+
+    def get_time_charging(self, action):
+        self.charging_time = 0
+
+        for sensitive_effect_sensor in self.list_sensor_sensitive_effect:
+            if sensitive_effect_sensor.is_lack_energy():
+                energy_need_charge = sensitive_effect_sensor.energy_thresh - sensitive_effect_sensor.energy
+                energy_charge_per_second = sensitive_effect_sensor.charge_by_sensor(self)
+                self.charging_time += energy_need_charge/energy_charge_per_second

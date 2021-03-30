@@ -10,3 +10,8 @@ EFS = 0.00000000001
 EMP = 0.0000000000000013
 prob = 1.0
 E_mc_thresh = 10
+
+delta = 0.000001
+state_dimension1 = 100
+state_dimension2 = 100
+number_action = 100

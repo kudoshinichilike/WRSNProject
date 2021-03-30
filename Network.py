@@ -1,6 +1,4 @@
 import csv
-import numpy as np
-
 from scipy.spatial import distance
 
 import Parameter as para
@@ -50,7 +48,7 @@ class Network:
         """
         return communicate_func(self)
 
-    def run_per_second(self, t, optimizer=None):
+    def run_per_second(self, t, optimizer=None, list_optimizer_sensor = None):
         """
         simulate network per second
         :param t: current time
@@ -71,6 +69,19 @@ class Network:
                     node.set_check_point(t)
         if optimizer:
             self.mc.run(network=self, time_stem=t, optimizer=optimizer)
+
+        if list_optimizer_sensor:
+            for idx, optimizer_sensor in enumerate(list_optimizer_sensor):
+                if optimizer_sensor.sensor.charging_time == 0:
+                    optimizer_sensor.update()
+
+                if optimizer_sensor.sensor.charging_time >= 1:
+                    optimizer_sensor.sensor.charge(1)
+                    optimizer_sensor.sensor.charging_time -= 1
+                elif optimizer_sensor.sensor.charging_time > 0 + para.delta:
+                    optimizer_sensor.sensor.charge(optimizer_sensor.sensor.charging_time)
+                    optimizer_sensor.sensor.charging_time = 0
+
         return state
 
     def simulate_lifetime(self, optimizer=None, file_name="log/energy_log.csv"):
@@ -96,10 +107,11 @@ class Network:
         energy_log.close()
         return t
 
-    def simulate_max_time(self, optimizer=None, max_time=10**6, file_name="log/information_log.csv"):
+    def simulate_max_time(self, optimizer=None, list_optimizer_sensor=None, max_time=10**6, file_name="log/information_log.csv"):
         """
         simulate process finish when current time is more than the max_time
         :param optimizer:
+        :param list_optimizer_sensor:
         :param max_time:
         :param file_name:
         :return:
@@ -114,7 +126,7 @@ class Network:
             t += 1
             if (t-1) % 1000 == 0:
                 print(t, self.mc.current, self.node[self.find_min_node()].energy)
-            state = self.run_per_second(t, optimizer)
+            state = self.run_per_second(t, optimizer, list_optimizer_sensor)
             current_dead = self.count_dead_node()
             current_package = self.count_package()
             if current_dead != nb_dead or current_package != nb_package:
@@ -124,7 +136,7 @@ class Network:
         information_log.close()
         return t
 
-    def simulate(self, optimizer=None, max_time=None, file_name="log/energy_log.csv"):
+    def simulate(self, optimizer=None, list_optimizer_sensor=None, max_time=None, file_name="log/energy_log.csv"):
         """
         simulate in general. if max_time is not none, simulate_max_time will be called
         :param optimizer:
@@ -133,7 +145,7 @@ class Network:
         :return:
         """
         if max_time:
-            t = self.simulate_max_time(optimizer=optimizer, max_time=max_time)
+            t = self.simulate_max_time(optimizer=optimizer, list_optimizer_sensor=list_optimizer_sensor, max_time=max_time)
         else:
             t = self.simulate_lifetime(optimizer=optimizer, file_name=file_name)
         return t

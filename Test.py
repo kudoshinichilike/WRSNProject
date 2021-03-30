@@ -5,37 +5,13 @@ import pandas as pd
 from ast import literal_eval
 from MobileCharger import MobileCharger
 from Q__Learning import Q_learning
+from Q_LearningSensor import Q_LearningSensor
 from Inma import Inma
 from GSA import GSA
 from scipy.stats import sem, t
 import numpy as np
 import csv
 import sys
-
-# index = 0
-# random.seed(3)
-# df = pd.read_csv("data/thaydoitileguitin.csv")
-# node_pos = list(literal_eval(df.node_pos[index]))
-# list_node = []
-# for i in range(len(node_pos)):
-#     location = node_pos[i]
-#     com_ran = df.commRange[index]
-#     energy = df.energy[index]
-#     energy_max = df.energy[index]
-#     prob = df.freq[index]
-#     node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
-#                 energy_thresh=0.4 * energy, prob=prob)
-#     list_node.append(node)
-# mc = MobileCharger(energy=df.E_mc[index], capacity=df.E_max[index], e_move=df.e_move[index],
-#                    e_self_charge=df.e_mc[index], velocity=df.velocity[index])
-# target = [int(item) for item in df.target[index].split(',')]
-# net = Network(list_node=list_node,  mc=mc, target=target)
-# print(len(net.node), len(net.target), max(net.target))
-# q_learning = Q_learning(network=net)
-# inma = Inma()
-# gsa = GSA()
-# net.simulate(optimizer=q_learning, file_name="log/energy_information_log.csv")
-
 
 read_file = sys.argv[1]
 write_file = sys.argv[2]
@@ -67,6 +43,7 @@ for id_data in range(data_range):
         random.seed(nb_run)
         node_pos = list(literal_eval(df.node_pos[index]))
         list_node = []
+        list_optimizer_sensor = []
         for i in range(len(node_pos)):
             location = node_pos[i]
             com_ran = df.commRange[index]
@@ -76,6 +53,7 @@ for id_data in range(data_range):
             node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
                         energy_thresh=0.4 * energy, prob=prob)
             list_node.append(node)
+            list_optimizer_sensor.append(Q_LearningSensor(node))
         mc = MobileCharger(energy=df.E_mc[index], capacity=df.E_max[index], e_move=df.e_move[index],
                            e_self_charge=df.e_mc[index], velocity=df.velocity[index])
         target = [int(item) for item in df.target[index].split(',')]
@@ -93,7 +71,7 @@ for id_data in range(data_range):
         elif opt == "none":
             optimizer = None
         file_name = "log/q_learning_" + str(index) + ".csv"
-        temp = net.simulate(optimizer=optimizer, file_name=file_name, max_time=max_time)
+        temp = net.simulate(optimizer=optimizer, list_optimizer_sensor=list_optimizer_sensor, file_name=file_name, max_time=max_time)
         life_time.append(temp)
         result.writerow({"nb run": nb_run, "lifetime": temp})
         print("done run = ", nb_run)
