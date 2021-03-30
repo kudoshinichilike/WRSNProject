@@ -44,6 +44,7 @@ data_start = int(sys.argv[4])
 run_range = int(sys.argv[5])
 learning_rate = float(sys.argv[6])
 scale_factor = float(sys.argv[7])
+
 read_name = "data/" + read_file + ".csv"
 try:
     opt = sys.argv[8]
@@ -53,6 +54,24 @@ try:
     max_time = int(sys.argv[9])
 except:
     max_time = None
+
+# read_file = "thaydoinangluongmc"
+# write_file = "try"
+# data_range = 1
+# data_start = 4
+# run_range = 1
+# learning_rate = 0.01
+# scale_factor = 0.9
+#
+# read_name = "data/" + read_file + ".csv"
+# try:
+#     opt = sys.argv[8]
+# except:
+#     opt = "qlearning"
+# try:
+#     max_time = 5
+# except:
+#     max_time = None
 df = pd.read_csv(read_name)
 for id_data in range(data_range):
     index = id_data + data_start
