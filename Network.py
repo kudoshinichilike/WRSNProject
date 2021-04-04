@@ -84,15 +84,17 @@ class Network:
         writer = csv.DictWriter(energy_log, fieldnames=["time", "mc energy", "min energy"])
         writer.writeheader()
         t = 0
-        while self.node[self.find_min_node()].energy >= 0 and t <= 2 * 10**6:
+        while self.node[self.find_min_node()].energy >= 0 and t <= 2 * 10:
+            # print("simulate_lifetime", t)
             t = t + 1
-            if (t - 1) % 1000 == 0:
+            if (t - 1) % 10 == 0:
                 print(t, self.mc.current, self.node[self.find_min_node()].energy)
             state = self.run_per_second(t, optimizer)
             # if not (t - 1) % 50:
             #     writer.writerow(
             #         {"time": t, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy})
-        writer.writerow({"time": t, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy})
+            writer.writerow({"time": t, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy})
+
         energy_log.close()
         return t
 
