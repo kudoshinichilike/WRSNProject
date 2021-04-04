@@ -4,6 +4,11 @@ from scipy.spatial import distance
 import Parameter as para
 from Network_Method import uniform_com_func, to_string, count_package_function
 
+write_file_log = "log"
+write_name_log = "log/" + write_file_log + ".csv"
+open_file_log = open(write_name_log, "w")
+result_log = csv.DictWriter(open_file_log, fieldnames=["time", "energy"])
+result_log.writeheader()
 
 class Network:
     def __init__(self, list_node=None, mc=None, target=None):
@@ -73,7 +78,8 @@ class Network:
         if list_optimizer_sensor:
             for idx, optimizer_sensor in enumerate(list_optimizer_sensor):
                 if optimizer_sensor.sensor.charging_time == 0:
-                    optimizer_sensor.update()
+                    optimizer_sensor.sensor.update_list_sensor_sensitive_effect(self)
+                    optimizer_sensor.update(self)
 
                 if optimizer_sensor.sensor.charging_time >= 1:
                     optimizer_sensor.sensor.charge(1)
@@ -81,6 +87,13 @@ class Network:
                 elif optimizer_sensor.sensor.charging_time > 0 + para.delta:
                     optimizer_sensor.sensor.charge(optimizer_sensor.sensor.charging_time)
                     optimizer_sensor.sensor.charging_time = 0
+
+        if t % 1000 == 0:
+            energy_log = []
+            for idx, sensor in enumerate(self.node):
+                energy_log.append(sensor.energy)
+
+            # result_log.writerow({"time": t, "energy":energy_log})
 
         return state
 
@@ -107,7 +120,7 @@ class Network:
         energy_log.close()
         return t
 
-    def simulate_max_time(self, optimizer=None, list_optimizer_sensor=None, max_time=10**6, file_name="log/information_log.csv"):
+    def simulate_max_time(self, optimizer=None, list_optimizer_sensor=None, max_time=50, file_name="log/information_log.csv"):
         """
         simulate process finish when current time is more than the max_time
         :param optimizer:
@@ -117,12 +130,14 @@ class Network:
         :return:
         """
         information_log = open(file_name, "w")
-        writer = csv.DictWriter(information_log, fieldnames=["time", "nb dead", "nb package"])
+        # writer = csv.DictWriter(information_log, fieldnames=["time", "nb dead", "nb package"])
+        writer = csv.DictWriter(information_log, fieldnames=["time", "mc energy", "min energy"])
         writer.writeheader()
         nb_dead = 0
         nb_package = len(self.target)
         t = 0
         while t <= max_time and nb_package > 0:
+            print("simulate_max_time time", t)
             t += 1
             if (t-1) % 1000 == 0:
                 print(t, self.mc.current, self.node[self.find_min_node()].energy)
@@ -132,7 +147,10 @@ class Network:
             if current_dead != nb_dead or current_package != nb_package:
                 nb_dead = current_dead
                 nb_package = current_package
-                writer.writerow({"time": t, "nb dead": nb_dead, "nb package": nb_package})
+            #     writer.writerow({"time": t, "nb dead": nb_dead, "nb package": nb_package})
+
+            writer.writerow(
+                {"time": t, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy})
         information_log.close()
         return t
 

@@ -39,8 +39,9 @@ class Q_LearningSensor:
         :return:
         """
         reward = reward_func(self.sensor, network, receive_func=find_receiver)
-        self.q_table[self.state[0]][self.state[1]][self.action] = (1 - self.alpha) * self.q_table[self.state] + self.alpha * \
-                                                                  (reward + self.gamma * self.q_max(state))
+        new_value_q = (1 - self.alpha) * self.q_table[self.state[0]][self.state[1]][self.action] + self.alpha * (reward + self.gamma * self.q_max(state))
+        # print("new_value_q", new_value_q)
+        self.q_table[self.state[0]][self.state[1]][self.action] = new_value_q
 
     def q_max(self, state):
         """
@@ -58,3 +59,4 @@ class Q_LearningSensor:
         """
         action = np.argmax(self.q_table[state[0]][state[1]])
         return action
+

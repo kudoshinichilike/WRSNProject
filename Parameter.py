@@ -15,3 +15,4 @@ delta = 0.000001
 state_dimension1 = 100
 state_dimension2 = 100
 number_action = 100
+max_default = 1000000000

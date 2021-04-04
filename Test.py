@@ -13,29 +13,47 @@ import numpy as np
 import csv
 import sys
 
-read_file = sys.argv[1]
-write_file = sys.argv[2]
-data_range = int(sys.argv[3])
-data_start = int(sys.argv[4])
-run_range = int(sys.argv[5])
-learning_rate = float(sys.argv[6])
-scale_factor = float(sys.argv[7])
+read_file = "thaydoisonode"
+write_file = "try"
+data_range = 1
+data_start = 1
+run_range = 1
+learning_rate = 0.01
+scale_factor = 0.9
 read_name = "data/" + read_file + ".csv"
 try:
     opt = sys.argv[8]
 except:
     opt = "qlearning"
 try:
-    max_time = int(sys.argv[9])
+    max_time = 100
 except:
     max_time = None
+
+# read_file = sys.argv[1]
+# write_file = sys.argv[2]
+# data_range = int(sys.argv[3])
+# data_start = int(sys.argv[4])
+# run_range = int(sys.argv[5])
+# learning_rate = float(sys.argv[6])
+# scale_factor = float(sys.argv[7])
+# read_name = "data/" + read_file + ".csv"
+# try:
+#     opt = sys.argv[8]
+# except:
+#     opt = "qlearning"
+# try:
+#     max_time = int(sys.argv[9])
+# except:
+#     max_time = None
+
 df = pd.read_csv(read_name)
 for id_data in range(data_range):
     index = id_data + data_start
     print("nb data = ", index)
     write_name = "log/" + write_file + str(index) + ".csv"
     open_file = open(write_name, "w")
-    result = csv.DictWriter(open_file, fieldnames=["nb run", "lifetime"])
+    result = csv.DictWriter(open_file, fieldnames=["nb run", "lifetime", "energy"])
     result.writeheader()
     life_time = []
     for nb_run in range(run_range):
@@ -53,12 +71,12 @@ for id_data in range(data_range):
             node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
                         energy_thresh=0.4 * energy, prob=prob)
             list_node.append(node)
-            list_optimizer_sensor.append(Q_LearningSensor(node))
+            list_optimizer_sensor.append(Q_LearningSensor(sensor=node, alpha=learning_rate, gamma=scale_factor))
         mc = MobileCharger(energy=df.E_mc[index], capacity=df.E_max[index], e_move=df.e_move[index],
                            e_self_charge=df.e_mc[index], velocity=df.velocity[index])
         target = [int(item) for item in df.target[index].split(',')]
         net = Network(list_node=list_node, mc=mc, target=target)
-        # print(len(net.node), len(net.target), max(net.target))
+        print("test", len(net.node), len(net.target), max(net.target))
         q_learning = Q_learning(alpha=learning_rate, gamma=scale_factor)
         inma = Inma()
         gsa = GSA()

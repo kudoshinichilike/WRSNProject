@@ -16,7 +16,10 @@ def reward_function(sensor, network, receive_func=find_receiver):
     :param receive_func:
     :return: reward
     """
-    second = sensor.weight_sensitive / sensor.weight
+    second = para.max_default
+    if sensor.weight != 0:
+        second = sensor.weight_sensitive / sensor.weight
+
     reward = second
     return reward
 
