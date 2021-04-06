@@ -28,7 +28,7 @@ class Node:
         self.list_sensor_sensitive_effect = []  # List sensor energy receive per second form this node > used per second
         self.weight_sensitive = 0
         self.weight = 0
-        self.charging_time = 0
+        self.charging_time = para.sensor_no_charge
 
     def set_average_energy(self, func=estimate_average_energy):
         """
@@ -198,27 +198,26 @@ class Node:
         else:
             return 0
 
-    def get_weight(self, network):
+    def get_weight(self, network, all_path):
         self.weight = 0
 
-        all_path = get_all_path(network)
         for path in all_path:
             if self.id in path:
                 self.weight += 1
 
         return self.weight
 
-    def update_weight(self, network):
+    def update_weight(self, network, all_path):
         """
         calculate self.weight_sensitive, self.weight
         :return:
         """
-        self.get_weight(network)
+        self.get_weight(network = network, all_path = all_path)
 
         self.weight_sensitive = 0
         for sensitive_effect_sensor in self.list_sensor_sensitive_effect:
             if sensitive_effect_sensor.is_lack_energy():
-                self.weight_sensitive += sensitive_effect_sensor.get_weight(network)
+                self.weight_sensitive += sensitive_effect_sensor.get_weight(network = network, all_path = all_path)
 
     def is_lack_energy(self):
         if self.energy < self.energy_thresh:

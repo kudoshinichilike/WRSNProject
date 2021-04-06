@@ -2,7 +2,7 @@ import csv
 from scipy.spatial import distance
 
 import Parameter as para
-from Network_Method import uniform_com_func, to_string, count_package_function
+from Network_Method import uniform_com_func, to_string, count_package_function, get_all_path
 
 write_file_log = "log"
 write_name_log = "log/" + write_file_log + ".csv"
@@ -60,6 +60,18 @@ class Network:
         :param optimizer: the optimizer used to calculate the next location of mc
         :return:
         """
+        if t < 100:
+            para.epsilon = 0.7
+        elif t < 500:
+            para.epsilon = 0.5
+        elif t < 1000:
+            para.epsilon = 0.3
+        elif t < 10000:
+            para.epsilon = 0.2
+        else:
+            para.epsilon = 0.1
+
+
         state = self.communicate()
         request_id = []
         for index, node in enumerate(self.node):
@@ -76,10 +88,16 @@ class Network:
             self.mc.run(network=self, time_stem=t, optimizer=optimizer)
 
         if list_optimizer_sensor:
+            all_path = get_all_path(self)
             for idx, optimizer_sensor in enumerate(list_optimizer_sensor):
+                optimizer_sensor.sensor.update_list_sensor_sensitive_effect(self)
+
                 if optimizer_sensor.sensor.charging_time == 0:
-                    optimizer_sensor.sensor.update_list_sensor_sensitive_effect(self)
-                    optimizer_sensor.update(self)
+                    optimizer_sensor.set_reward(network=self)
+                    optimizer_sensor.sensor.charging_time = para.sensor_no_charge
+
+                if optimizer_sensor.sensor.charging_time == para.sensor_no_charge:
+                    optimizer_sensor.update(self, all_path = all_path)
 
                 if optimizer_sensor.sensor.charging_time >= 1:
                     optimizer_sensor.sensor.charge(1)
@@ -97,7 +115,7 @@ class Network:
 
         return state
 
-    def simulate_lifetime(self, optimizer=None, file_name="log/energy_log.csv"):
+    def simulate_lifetime(self, optimizer=None, list_optimizer_sensor = None, file_name="log/energy_log.csv"):
         """
         simulate process finish when energy of any node is less than 0
         :param optimizer:
@@ -108,15 +126,17 @@ class Network:
         writer = csv.DictWriter(energy_log, fieldnames=["time", "mc energy", "min energy"])
         writer.writeheader()
         t = 0
-        while self.node[self.find_min_node()].energy >= 0 and t <= 2 * 10**6:
+        while self.node[self.find_min_node()].energy >= 0 and t <= 1000:
+            print("simulate_lifetime time", t)
             t = t + 1
             if (t - 1) % 1000 == 0:
                 print(t, self.mc.current, self.node[self.find_min_node()].energy)
-            state = self.run_per_second(t, optimizer)
+            state = self.run_per_second(t, optimizer, list_optimizer_sensor)
             # if not (t - 1) % 50:
             #     writer.writerow(
             #         {"time": t, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy})
-        writer.writerow({"time": t, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy})
+            writer.writerow({"time": t, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy})
+
         energy_log.close()
         return t
 
@@ -131,7 +151,7 @@ class Network:
         """
         information_log = open(file_name, "w")
         # writer = csv.DictWriter(information_log, fieldnames=["time", "nb dead", "nb package"])
-        writer = csv.DictWriter(information_log, fieldnames=["time", "mc energy", "min energy"])
+        writer = csv.DictWriter(information_log, fieldnames=["time", "mc energy", "min energy", "max charge"])
         writer.writeheader()
         nb_dead = 0
         nb_package = len(self.target)
@@ -150,7 +170,7 @@ class Network:
             #     writer.writerow({"time": t, "nb dead": nb_dead, "nb package": nb_package})
 
             writer.writerow(
-                {"time": t, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy})
+                {"time": t, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy, "max charge": self.node[self.find_max_node_charging()].charging_time})
         information_log.close()
         return t
 
@@ -165,7 +185,7 @@ class Network:
         if max_time:
             t = self.simulate_max_time(optimizer=optimizer, list_optimizer_sensor=list_optimizer_sensor, max_time=max_time)
         else:
-            t = self.simulate_lifetime(optimizer=optimizer, file_name=file_name)
+            t = self.simulate_lifetime(optimizer=optimizer, list_optimizer_sensor=list_optimizer_sensor, file_name=file_name)
         return t
 
     def print_net(self, func=to_string):
@@ -188,6 +208,19 @@ class Network:
                 min_energy = node.energy
                 min_id = node.id
         return min_id
+
+    def find_max_node_charging(self):
+        """
+        find id of node which has minimum energy in network
+        :return:
+        """
+        max_charging = -1
+        max_id = -1
+        for node in self.node:
+            if node.charging_time > max_charging:
+                max_charging = node.charging_time
+                max_id = node.id
+        return max_id
 
     def count_dead_node(self):
         """

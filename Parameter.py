@@ -16,3 +16,6 @@ state_dimension1 = 100
 state_dimension2 = 100
 number_action = 100
 max_default = 1000000000
+
+sensor_no_charge = -1
+epsilon = 0.2

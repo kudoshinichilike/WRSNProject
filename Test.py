@@ -13,10 +13,10 @@ import numpy as np
 import csv
 import sys
 
-read_file = "thaydoisonode"
+read_file = "thaydoinangluongmc"
 write_file = "try"
 data_range = 1
-data_start = 1
+data_start = 4
 run_range = 1
 learning_rate = 0.01
 scale_factor = 0.9
@@ -26,7 +26,7 @@ try:
 except:
     opt = "qlearning"
 try:
-    max_time = 100
+    max_time = 100000
 except:
     max_time = None
 
