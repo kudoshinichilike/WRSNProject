@@ -113,6 +113,7 @@ class Network:
         nb_package = len(self.target)
         t = 0
         while t <= max_time and nb_package > 0:
+            print("simulate_max_time", t)
             t += 1
             if (t-1) % 1000 == 0:
                 print(t, self.mc.current, self.node[self.find_min_node()].energy)
@@ -122,7 +123,7 @@ class Network:
             if current_dead != nb_dead or current_package != nb_package:
                 nb_dead = current_dead
                 nb_package = current_package
-                writer.writerow({"time": t, "nb dead": nb_dead, "nb package": nb_package})
+            writer.writerow({"time": t, "nb dead": nb_dead, "nb package": nb_package})
         information_log.close()
         return t
 

@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="bc86f012-d6b0-48fc-ac21-c11e28a2c3ce" name="Default Changelist" comment="try run first time">
-      <change afterPath="$PROJECT_DIR$/log/energy_log.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/log/q_learning_1.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/log/try1.csv" afterDir="false" />
+    <list default="true" id="bc86f012-d6b0-48fc-ac21-c11e28a2c3ce" name="Default Changelist" comment="run">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Network.py" beforeDir="false" afterPath="$PROJECT_DIR$/Network.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Test.py" beforeDir="false" afterPath="$PROJECT_DIR$/Test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/log/information_log.csv" beforeDir="false" afterPath="$PROJECT_DIR$/log/information_log.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/log/q_learning_1.csv" beforeDir="false" afterPath="$PROJECT_DIR$/log/q_learning_1.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/log/try1.csv" beforeDir="false" afterPath="$PROJECT_DIR$/log/try1.csv" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -130,5 +128,16 @@
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="add config" />
     <option name="LAST_COMMIT_MESSAGE" value="add config" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Test.py</url>
+          <line>115</line>
+          <option name="timeStamp" value="21" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
