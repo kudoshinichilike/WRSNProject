@@ -73,6 +73,10 @@ class Network:
 
 
         state = self.communicate()
+        eee = []
+        for node in self.node:
+            eee.append(node.energy)
+
         request_id = []
         for index, node in enumerate(self.node):
             if node.energy < node.energy_thresh:
@@ -151,7 +155,7 @@ class Network:
         """
         information_log = open(file_name, "w")
         # writer = csv.DictWriter(information_log, fieldnames=["time", "nb dead", "nb package"])
-        writer = csv.DictWriter(information_log, fieldnames=["time", "mc energy", "min energy", "max charge"])
+        writer = csv.DictWriter(information_log, fieldnames=["time", "mc location", "mc energy", "min energy", "max charge"])
         writer.writeheader()
         nb_dead = 0
         nb_package = len(self.target)
@@ -162,6 +166,12 @@ class Network:
             if (t-1) % 1000 == 0:
                 print(t, self.mc.current, self.node[self.find_min_node()].energy)
             state = self.run_per_second(t, optimizer, list_optimizer_sensor)
+
+            eee = []
+            for node in self.node:
+                eee.append(node.energy)
+            print("enery", eee)
+
             current_dead = self.count_dead_node()
             current_package = self.count_package()
             if current_dead != nb_dead or current_package != nb_package:
@@ -170,7 +180,7 @@ class Network:
             #     writer.writerow({"time": t, "nb dead": nb_dead, "nb package": nb_package})
 
             writer.writerow(
-                {"time": t, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy, "max charge": self.node[self.find_max_node_charging()].charging_time})
+                {"time": t, "mc location": self.mc.current, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy, "max charge": self.node[self.find_max_node_charging()].charging_time})
         information_log.close()
         return t
 

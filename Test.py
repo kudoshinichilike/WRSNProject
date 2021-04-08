@@ -13,10 +13,10 @@ import numpy as np
 import csv
 import sys
 
-read_file = "thaydoinangluongmc"
+read_file = "thaydoisotarget"
 write_file = "try"
 data_range = 1
-data_start = 4
+data_start = 1
 run_range = 1
 learning_rate = 0.01
 scale_factor = 0.9
