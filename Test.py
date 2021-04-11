@@ -18,7 +18,7 @@ write_file = "try"
 data_range = 1
 data_start = 4
 run_range = 1
-learning_rate = 0.01
+learning_rate = 0.1
 scale_factor = 0.9
 read_name = "data/" + read_file + ".csv"
 try:
@@ -68,8 +68,9 @@ for id_data in range(data_range):
             energy = df.energy[index]
             energy_max = df.energy[index]
             prob = df.freq[index]
+            energy = 4.2  # TODO:
             node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
-                        energy_thresh=0.4 * energy, prob=prob)
+                        energy_thresh=0.4 * energy_max, prob=prob)  # TODO: energy_thresh=0.4 * energy
             list_node.append(node)
             list_optimizer_sensor.append(Q_LearningSensor(sensor=node, alpha=learning_rate, gamma=scale_factor))
         mc = MobileCharger(energy=df.E_mc[index], capacity=df.E_max[index], e_move=df.e_move[index],
@@ -89,7 +90,8 @@ for id_data in range(data_range):
         elif opt == "none":
             optimizer = None
         file_name = "log/q_learning_" + str(index) + ".csv"
-        temp = net.simulate(optimizer=optimizer, list_optimizer_sensor=list_optimizer_sensor, file_name=file_name, max_time=max_time)
+        temp = net.simulate(optimizer=optimizer, list_optimizer_sensor=list_optimizer_sensor, file_name=file_name,
+                            max_time=max_time)
         life_time.append(temp)
         result.writerow({"nb run": nb_run, "lifetime": temp})
         print("done run = ", nb_run)

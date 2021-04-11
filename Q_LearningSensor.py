@@ -29,7 +29,9 @@ class Q_LearningSensor:
 
         if self.action == 0:
             self.sensor.charging_time = para.sensor_no_charge
-            return
+        else:
+            print("update q_sensor", self.sensor.id, self.state, self.action)
+
 
     def set_reward(self, reward_func=reward_function, network=None):
         """

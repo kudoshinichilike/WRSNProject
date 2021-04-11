@@ -78,6 +78,7 @@ class MobileCharger:
         self.end = next_location
         moving_time = distance.euclidean(self.start, self.end) / self.velocity
         self.end_time = time_stem + moving_time + charging_time
+        print("get_next_location", next_location, charging_time)
 
     def run(self, network, time_stem, optimizer=None):
         """

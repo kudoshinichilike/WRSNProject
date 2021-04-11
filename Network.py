@@ -102,7 +102,8 @@ class Network:
                     optimizer_sensor.set_reward(network=self)
 
                 if optimizer_sensor.sensor.is_list_request_changed:
-                    optimizer_sensor.set_reward(network=self)
+                    if optimizer_sensor.sensor.charging_time > para.delta:
+                        optimizer_sensor.set_reward(network=self)
                     optimizer_sensor.update(self)
                     optimizer_sensor.sensor.is_list_request_changed = False
 
@@ -148,7 +149,7 @@ class Network:
         """
         information_log = open(file_name, "w")
         # writer = csv.DictWriter(information_log, fieldnames=["time", "nb dead", "nb package"])
-        writer = csv.DictWriter(information_log, fieldnames=["time", "mc location", "mc energy", "min energy", "max charge"])
+        writer = csv.DictWriter(information_log, fieldnames=["time", "mc location", "mc energy", "min energy", "max energy", "max charge"])
         writer.writeheader()
         nb_dead = 0
         nb_package = len(self.target)
@@ -157,7 +158,6 @@ class Network:
             print("simulate_max_time time", t)
             t += 1
             state = self.run_per_second(t, optimizer, list_optimizer_sensor)
-            print("simulate_max_time", t, self.mc.current, self.node[self.find_min_node()].energy)
             #
             # eee = []
             # for node in self.node:
@@ -170,10 +170,11 @@ class Network:
                 nb_dead = current_dead
                 nb_package = current_package
             #     writer.writerow({"time": t, "nb dead": nb_dead, "nb package": nb_package})
-
-            print(t, self.node[self.find_min_node()].energy)
+            node_min_energy = self.node[self.find_min_node()]
+            node_max_energy = self.node[self.find_max_node()]
+            print("min_energy", node_min_energy.id, node_min_energy.energy, "max_energy", node_max_energy.id, node_max_energy.energy)
             writer.writerow(
-                {"time": t, "mc location": self.mc.current, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy, "max charge": self.node[self.find_max_node_charging()].charging_time})
+                {"time": t, "mc location": self.mc.current, "mc energy": self.mc.energy, "min energy": node_min_energy.energy, "max energy": node_max_energy.energy, "max charge": self.node[self.find_max_node_charging()].charging_time})
         information_log.close()
         return t
 
@@ -208,10 +209,24 @@ class Network:
         min_id = -1
         for node in self.node:
             # print("find_min_node", node.id, node.energy)
-            if node.energy < min_energy:
+            if node.energy <= min_energy:
                 min_energy = node.energy
                 min_id = node.id
         return min_id
+
+    def find_max_node(self):
+        """
+        find id of node which has minimum energy in network
+        :return:
+        """
+        max_energy = -10 ** 10
+        max_id = -1
+        for node in self.node:
+            # print("find_min_node", node.id, node.energy)
+            if node.energy >= max_energy:
+                max_energy = node.energy
+                max_id = node.id
+        return max_id
 
     def find_max_node_charging(self):
         """

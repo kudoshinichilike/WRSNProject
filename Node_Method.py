@@ -60,14 +60,16 @@ def request_function(node, network, mc, t):
     :param t: time get request
     :return: None
     """
+    for sensor in network.node:
+        if node.used_energy < node.calE_charge_by_sensor(sensor):
+            if node not in sensor.list_request:
+                sensor.list_request.append(node)
+                sensor.is_list_request_changed = True
+
     mc.list_request.append(
         {"id": node.id, "energy": node.energy, "avg_energy": node.avg_energy, "energy_estimate": node.energy,
          "time": t})
 
-    for sensor in network.node:
-        if node.used_energy < node.calE_charge_by_sensor(sensor):
-            sensor.list_request.append(node)
-            sensor.is_list_request_changed = True
 
 def estimate_average_energy(node):
     """
