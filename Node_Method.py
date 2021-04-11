@@ -51,9 +51,10 @@ def find_receiver(node, net):
         return -1
 
 
-def request_function(node, mc, t):
+def request_function(node, network, mc, t):
     """
     add a message to request list of mc.
+    :param network:
     :param node: the node request
     :param mc: mobile charger
     :param t: time get request
@@ -63,6 +64,10 @@ def request_function(node, mc, t):
         {"id": node.id, "energy": node.energy, "avg_energy": node.avg_energy, "energy_estimate": node.energy,
          "time": t})
 
+    for sensor in network.node:
+        if node.used_energy < node.calE_charge_by_sensor(sensor):
+            sensor.list_request.append(node)
+            sensor.is_list_request_changed = True
 
 def estimate_average_energy(node):
     """

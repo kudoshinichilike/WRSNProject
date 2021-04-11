@@ -4,6 +4,7 @@ from scipy.spatial import distance
 
 import Parameter as para
 import Fuzzy
+from Network_Method import get_all_path
 from Node_Method import find_receiver
 
 
@@ -12,15 +13,20 @@ def reward_function(sensor, network, receive_func=find_receiver):
     calculate reward function
     :param sensor:
     :param network:
-    :param energy_charge_to_sensitive:
     :param receive_func:
     :return: reward
     """
-    second = para.max_default
-    if sensor.weight != 0:
-        second = sensor.weight_sensitive / sensor.weight
+    # get_weight
+    all_path = get_all_path(network)
+    weight_sensor = sensor.get_weight(network, all_path)
 
-    reward = second
+    if weight_sensor == 0:
+        return para.max_default
+
+    reward = 0
+    for node in sensor.list_request:
+        reward += node.receive_energy[sensor.id] * node.get_weight(network, all_path) / weight_sensor
+
     return reward
 
 
@@ -30,7 +36,11 @@ def init_q_table_function(nb_action=81):
     :param nb_action:
     :return:
     """
-    return np.zeros((para.state_dimension1 + 1, para.state_dimension2 + 1, para.number_action), dtype=float)
+    q_table = np.zeros((para.state_dimension1 + 1, para.state_dimension2 + 1, para.number_action), dtype=float)
+    # for state_sensor in range (101):
+    #         q_table[state_sensor][0][0] = 1000
+
+    return q_table
 
 
 def calc_state_function(sensor):

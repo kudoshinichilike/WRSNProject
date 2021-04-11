@@ -73,14 +73,11 @@ class Network:
 
 
         state = self.communicate()
-        eee = []
-        for node in self.node:
-            eee.append(node.energy)
 
         request_id = []
         for index, node in enumerate(self.node):
             if node.energy < node.energy_thresh:
-                node.request(mc=self.mc, t=t)
+                node.request(network=self, mc=self.mc, t=t)
                 request_id.append(index)
             else:
                 node.is_request = False
@@ -92,30 +89,25 @@ class Network:
             self.mc.run(network=self, time_stem=t, optimizer=optimizer)
 
         if list_optimizer_sensor:
-            all_path = get_all_path(self)
             for idx, optimizer_sensor in enumerate(list_optimizer_sensor):
-                optimizer_sensor.sensor.update_list_sensor_sensitive_effect(self)
-
-                if optimizer_sensor.sensor.charging_time == 0:
-                    optimizer_sensor.set_reward(network=self)
-                    optimizer_sensor.sensor.charging_time = para.sensor_no_charge
-
-                if optimizer_sensor.sensor.charging_time == para.sensor_no_charge:
-                    optimizer_sensor.update(self, all_path = all_path)
-
                 if optimizer_sensor.sensor.charging_time >= 1:
-                    optimizer_sensor.sensor.charge(1)
+                    optimizer_sensor.sensor.charge_to_another_sensor(1)
                     optimizer_sensor.sensor.charging_time -= 1
-                elif optimizer_sensor.sensor.charging_time > 0 + para.delta:
-                    optimizer_sensor.sensor.charge(optimizer_sensor.sensor.charging_time)
+                elif optimizer_sensor.sensor.charging_time > para.delta:
+                    optimizer_sensor.sensor.charge_to_another_sensor(optimizer_sensor.sensor.charging_time)
                     optimizer_sensor.sensor.charging_time = 0
 
-        if t % 1000 == 0:
-            energy_log = []
-            for idx, sensor in enumerate(self.node):
-                energy_log.append(sensor.energy)
+                if - para.delta <= optimizer_sensor.sensor.charging_time <= para.delta:
+                    optimizer_sensor.sensor.charging_time = para.sensor_no_charge
+                    optimizer_sensor.set_reward(network=self)
 
-            # result_log.writerow({"time": t, "energy":energy_log})
+                if optimizer_sensor.sensor.is_list_request_changed:
+                    optimizer_sensor.set_reward(network=self)
+                    optimizer_sensor.update(self)
+                    optimizer_sensor.sensor.is_list_request_changed = False
+
+        # for node in self.node:
+        #     print("run_per_second", node.id, node.energy)
 
         return state
 
@@ -134,7 +126,7 @@ class Network:
             print("simulate_lifetime time", t)
             t = t + 1
             if (t - 1) % 1000 == 0:
-                print(t, self.mc.current, self.node[self.find_min_node()].energy)
+                print("simulate_lifetime", t, self.mc.current, self.node[self.find_min_node()].energy)
             state = self.run_per_second(t, optimizer, list_optimizer_sensor)
             # if not (t - 1) % 50:
             #     writer.writerow(
@@ -163,14 +155,13 @@ class Network:
         while t <= max_time and nb_package > 0:
             print("simulate_max_time time", t)
             t += 1
-            if (t-1) % 1000 == 0:
-                print(t, self.mc.current, self.node[self.find_min_node()].energy)
             state = self.run_per_second(t, optimizer, list_optimizer_sensor)
-
-            eee = []
-            for node in self.node:
-                eee.append(node.energy)
-            print("enery", eee)
+            print("simulate_max_time", t, self.mc.current, self.node[self.find_min_node()].energy)
+            #
+            # eee = []
+            # for node in self.node:
+            #     eee.append(node.energy)
+            # print("enery", eee)
 
             current_dead = self.count_dead_node()
             current_package = self.count_package()
@@ -179,6 +170,7 @@ class Network:
                 nb_package = current_package
             #     writer.writerow({"time": t, "nb dead": nb_dead, "nb package": nb_package})
 
+            print(t, self.node[self.find_min_node()].energy)
             writer.writerow(
                 {"time": t, "mc location": self.mc.current, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy, "max charge": self.node[self.find_max_node_charging()].charging_time})
         information_log.close()
@@ -214,6 +206,7 @@ class Network:
         min_energy = 10 ** 10
         min_id = -1
         for node in self.node:
+            # print("find_min_node", node.id, node.energy)
             if node.energy < min_energy:
                 min_energy = node.energy
                 min_id = node.id

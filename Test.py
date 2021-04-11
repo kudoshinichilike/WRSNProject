@@ -16,7 +16,7 @@ import sys
 read_file = "thaydoisotarget"
 write_file = "try"
 data_range = 1
-data_start = 1
+data_start = 4
 run_range = 1
 learning_rate = 0.01
 scale_factor = 0.9
@@ -26,7 +26,7 @@ try:
 except:
     opt = "qlearning"
 try:
-    max_time = 100000
+    max_time = 1000000
 except:
     max_time = None
 
