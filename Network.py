@@ -80,12 +80,13 @@ class Network:
         :param file_name: log file
         :return:
         """
+        print("simulate_lifetime", file_name)
         energy_log = open(file_name, "w")
         writer = csv.DictWriter(energy_log, fieldnames=["time", "mc energy", "min energy"])
         writer.writeheader()
         t = 0
-        while self.node[self.find_min_node()].energy >= 0 and t <= 2 * 10:
-            # print("simulate_lifetime", t)
+        while self.node[self.find_min_node()].energy >= 0 and t <= 10**7:
+            print("simulate_lifetime", t)
             t = t + 1
             if (t - 1) % 10 == 0:
                 print(t, self.mc.current, self.node[self.find_min_node()].energy)
@@ -106,6 +107,7 @@ class Network:
         :param file_name:
         :return:
         """
+        print("simulate_max_time", file_name)
         information_log = open(file_name, "w")
         writer = csv.DictWriter(information_log, fieldnames=["time", "nb dead", "nb package"])
         writer.writeheader()
@@ -123,7 +125,9 @@ class Network:
             if current_dead != nb_dead or current_package != nb_package:
                 nb_dead = current_dead
                 nb_package = current_package
+            print("time {}".format(t))
             writer.writerow({"time": t, "nb dead": nb_dead, "nb package": nb_package})
+
         information_log.close()
         return t
 
@@ -138,7 +142,7 @@ class Network:
         if max_time:
             t = self.simulate_max_time(optimizer=optimizer, max_time=max_time)
         else:
-            t = self.simulate_lifetime(optimizer=optimizer, file_name=file_name)
+            t = self.simulate_lifetime(optimizer=optimizer)
         return t
 
     def print_net(self, func=to_string):
