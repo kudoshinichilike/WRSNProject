@@ -114,6 +114,7 @@ class Network:
     def simulate_lifetime(self, optimizer=None, list_optimizer_sensor = None, file_name="log/energy_log.csv"):
         """
         simulate process finish when energy of any node is less than 0
+        :param list_optimizer_sensor:
         :param optimizer:
         :param file_name: log file
         :return:
