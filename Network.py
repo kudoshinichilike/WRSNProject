@@ -115,7 +115,6 @@ class Network:
         nb_package = len(self.target)
         t = 0
         while t <= max_time and nb_package > 0:
-            print("simulate_max_time", t)
             t += 1
             if (t-1) % 1000 == 0:
                 print(t, self.mc.current, self.node[self.find_min_node()].energy)
@@ -125,7 +124,7 @@ class Network:
             if current_dead != nb_dead or current_package != nb_package:
                 nb_dead = current_dead
                 nb_package = current_package
-            print("time {}".format(t))
+            print("simulate_max_time", t, self.node[self.find_min_node()].energy, self.node[self.find_max_node()].energy)
             writer.writerow({"time": t, "nb dead": nb_dead, "nb package": nb_package})
 
         information_log.close()
@@ -165,6 +164,19 @@ class Network:
                 min_energy = node.energy
                 min_id = node.id
         return min_id
+
+    def find_max_node(self):
+        """
+        find id of node which has minimum energy in network
+        :return:
+        """
+        max_energy = -10 ** 10
+        max_id = -1
+        for node in self.node:
+            if node.energy >= max_energy:
+                max_energy = node.energy
+                max_id = node.id
+        return max_id
 
     def count_dead_node(self):
         """

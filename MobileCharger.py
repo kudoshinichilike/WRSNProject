@@ -99,10 +99,10 @@ class MobileCharger:
         else:
             if self.is_active:
                 if not self.is_stand:
-                    # print("moving")
+                    print("moving")
                     self.update_location()
                 elif not self.is_self_charge:
-                    # print("charging")
+                    print("charging")
                     self.charge(network)
                 else:
                     print("self charging")
