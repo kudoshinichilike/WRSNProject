@@ -98,11 +98,11 @@ class Network:
                     optimizer_sensor.sensor.charging_time = 0
 
                 if - para.delta <= optimizer_sensor.sensor.charging_time <= para.delta:
-                    optimizer_sensor.sensor.charging_time = para.sensor_no_charge
                     optimizer_sensor.set_reward(network=self)
+                    optimizer_sensor.sensor.charging_time = para.sensor_no_charge
 
                 if optimizer_sensor.sensor.is_list_request_changed:
-                    if optimizer_sensor.sensor.charging_time > para.delta:
+                    if optimizer_sensor.sensor.charging_time != para.sensor_no_charge:
                         optimizer_sensor.set_reward(network=self)
                     optimizer_sensor.update(self)
                     optimizer_sensor.sensor.is_list_request_changed = False

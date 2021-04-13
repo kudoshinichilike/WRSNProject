@@ -25,12 +25,17 @@ class Q_LearningSensor:
         """
         self.state = calc_state_function(self.sensor)
         self.action = self.choose_next_action(self.state)
-        self.sensor.charging_time_original = self.sensor.get_time_charging(self.action)
 
         if self.action == 0:
             self.sensor.charging_time = para.sensor_no_charge
         else:
+            self.sensor.get_time_charging(self.action)
+            self.sensor.charging_energy_original = self.sensor.get_residual_energy() / 100.0 * self.action
             print("update q_sensor", self.sensor.id, self.state, self.action)
+            self.sensor.residual_energy = self.sensor.get_residual_energy()
+            self.sensor.charged_energy = 0
+            for node in self.sensor.list_request:
+                node.receive_energy[self.sensor.id] = 0
 
 
     def set_reward(self, reward_func=reward_function, network=None):
@@ -43,17 +48,18 @@ class Q_LearningSensor:
         state = calc_state_function(self.sensor)
         reward = reward_func(self.sensor, network, receive_func=find_receiver)
 
-        if self.sensor.charging_time != para.sensor_no_charge:
-            self.action = round(self.sensor.charged_energy / self.sensor.charging_time_original * 100)
+        self.action = round(self.sensor.charged_energy / self.sensor.residual_energy * 100)
 
-        new_value_q = (1 - self.alpha) * self.q_table[self.state[0]][self.state[1]][self.action] + self.alpha * (
-                    reward + self.gamma * self.q_max(state))
+        print("set reward action", self.action, self.sensor.charged_energy, self.sensor.residual_energy)
+        print("set reward state", self.state)
+        new_value_q = (1 - self.alpha) * self.q_table[self.state[0]][self.state[1]][self.action] + self.alpha * (reward + self.gamma * self.q_max(state))
         # print("new_value_q", new_value_q)
         self.q_table[self.state[0]][self.state[1]][self.action] = new_value_q
 
         # reset chi so sau khi set reward
         self.sensor.charged_energy = 0
         self.sensor.charging_time_original = 0
+        self.sensor.residual_energy = 0
         for node in self.sensor.list_request:
             node.receive_energy[self.sensor.id] = 0
 
@@ -73,11 +79,11 @@ class Q_LearningSensor:
         :param state:
         :return: action is percent energy will charge in max q_table
         """
-        if state[1] == 0:
+        if state[0] == 0 or state[1] == 0:
             return 0
 
         if random.uniform(0, 1) < para.epsilon:
-            action = random.uniform(0, 100)
+            action = round(random.uniform(0, 100))
         else:
             action = np.argmax(self.q_table[state[0]][state[1]])
 

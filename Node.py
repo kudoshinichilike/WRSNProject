@@ -6,6 +6,7 @@ from scipy.spatial import distance
 import Parameter as para
 from Node_Method import to_string, find_receiver, request_function, estimate_average_energy
 
+
 class Node:
     def __init__(self, location=None, com_ran=None, sen_ran=None, energy=None, prob=para.prob, avg_energy=0.0,
                  len_cp=10, id=None, is_active=True, energy_max=None, energy_thresh=None):
@@ -30,7 +31,8 @@ class Node:
         self.is_list_request_changed = False
         self.charging_time = para.sensor_no_charge
         self.charged_energy = 0
-        self.charging_time_original = 0
+        self.charging_energy_original = 0
+        self.residual_energy = 0
 
         self.receive_energy = np.zeros(600, dtype=float)
 
@@ -70,7 +72,7 @@ class Node:
         else:
             return 0
 
-    def charge_by_sensor(self, sensor, time = 1):
+    def charge_by_sensor(self, sensor, time=1):
         """
         charging to self by sensor
         :param sensor: sensor charge to this
@@ -86,7 +88,7 @@ class Node:
         else:
             return 0
 
-    def calE_charge_by_sensor(self, sensor, time = 1):
+    def calE_charge_by_sensor(self, sensor, time=1):
         """
         charging to self by sensor
         :param sensor: sensor charge to this
@@ -101,7 +103,7 @@ class Node:
         else:
             return 0
 
-    def get_energy_charge_by_sensor(self, sensor, time = 1):
+    def get_energy_charge_by_sensor(self, sensor, time=1):
         """
         charging to self by sensor
         :param sensor: sensor charge to this
@@ -230,7 +232,7 @@ class Node:
 
     def is_lack_energy(self):
         # if self.energy < self.energy_thresh:
-            # print("Node is_lack_energy", self.energy < self.energy_thresh)
+        # print("Node is_lack_energy", self.energy < self.energy_thresh)
         return self.energy < self.energy_thresh
 
     def charge_to_another_sensor(self, time):
@@ -240,6 +242,9 @@ class Node:
         :return:
         """
         for sensor in self.list_request:
+            if self.charged_energy + sensor.calE_charge_by_sensor(self, time) > self.residual_energy:
+                continue
+
             charged_energy = sensor.charge_by_sensor(self, time)
             self.energy -= charged_energy
             self.charged_energy += charged_energy
@@ -247,12 +252,42 @@ class Node:
 
         self.charging_time -= time
 
+    def get_residual_energy(self):
+        if self.energy > self.energy_thresh:
+            return self.energy - self.energy_thresh
+
+        return 0
+
     def get_time_charging(self, action):
-        self.charging_time = 0
+        self.charging_energy_original = self.get_residual_energy() / 100.0 * action
+
+        charging_time_list = []
 
         for sensitive_effect_sensor in self.list_request:
             energy_need_charge = sensitive_effect_sensor.energy_thresh - sensitive_effect_sensor.energy
             energy_charge_per_second = sensitive_effect_sensor.calE_charge_by_sensor(self)
-            self.charging_time += energy_need_charge/energy_charge_per_second
+            charging_time_list.append([energy_need_charge / energy_charge_per_second, energy_charge_per_second])
 
+        charging_time_list = sorted(charging_time_list, key=lambda x: x[1], reverse=True)
+        energy_charge = np.zeros(len(charging_time_list), dtype=float)
+
+        for idx in range(len(charging_time_list)):
+            if not idx == 0:
+                energy_charge[idx] = energy_charge[idx - 1] + charging_time_list[idx][1]
+            else:
+                energy_charge[idx] = charging_time_list[idx][1]
+
+        for idx in range(len(charging_time_list) - 1, -1, -1):
+            if idx != 0 and (charging_time_list[idx][0] - para.delta <= charging_time_list[idx - 1][0] <= charging_time_list[idx][0] + para.delta):
+                continue
+
+            energy_charge_sum = energy_charge[idx] * charging_time_list[idx][0]
+            if energy_charge_sum >= self.charging_energy_original - para.delta:
+                energy_charge_sum = 0 if idx == (len(charging_time_list) - 1) else energy_charge[idx + 1] * charging_time_list[idx + 1][0]
+                self.charging_time = 0 if idx == (len(charging_time_list) - 1) else charging_time_list[idx + 1][0]
+                energy_charge_sum = self.charging_energy_original - energy_charge_sum
+                self.charging_time += energy_charge_sum / energy_charge[idx]
+                return self.charging_time
+
+        self.charging_time = charging_time_list[0][0]
         return self.charging_time
