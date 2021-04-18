@@ -1,0 +1,8 @@
+1- sửa hàm nhận năng lượng từ sensor
+2- chỉnh thread hold (cả bên model anh Quân)
+- thêm vị trí mc vào q_table
+- sửa là k nhận năng lượng thì năng lượng vẫn mất (q_sensor)
+- nếu 1 con đang nhận năng lượng từ mc thì sensor k sạc cho nó (khi mc bắt đầu sạc thì con này dừng sạc)
+- timer cho các con để sạc cho 1 con nào đó request (nếu q bằng nhau hoặc cùng random thì sao?)
+- 1 con có thể vừa sạc vừa nhận
+- thêm việc ra quyết định chọn random trong q bằng 1 thuật toán quyết định

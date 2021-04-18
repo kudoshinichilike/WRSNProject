@@ -1,5 +1,7 @@
 alpha = 36.0
 beta = 30.0
+alpha_sensor = 3.6
+beta_sensor = 3.0
 base = (500.0, 500.0)
 depot = (0.0, 0.0)
 b = 400.0
