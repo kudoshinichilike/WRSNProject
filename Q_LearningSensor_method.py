@@ -30,20 +30,21 @@ def reward_function(sensor, network, receive_func=find_receiver):
     return reward
 
 
-def init_q_table_function(nb_action=81):
+def init_q_table_function(nb_action=81, nb_action_mc = 81):
     """
     init q table
     :param nb_action:
     :return:
     """
-    q_table = np.zeros((para.state_dimension1 + 5, para.state_dimension2 + 5, para.number_action + 5), dtype=float)
+    q_table = np.zeros((para.state_dimension1 + 1, para.state_dimension2 + 1, nb_action_mc + 1, para.number_action + 1), dtype=float)
     # for state_sensor in range (101):
     #         q_table[state_sensor][0][0] = 1000
 
     return q_table
 
 
-def calc_state_function(sensor):
-    percent_lack_sensitive_sensors = sensor.get_percent_lack_sensitive_sensors()
-    percent_residual_energy = sensor.get_percent_residual_energy()
-    return [percent_residual_energy, percent_lack_sensitive_sensors]
+def calc_state_function(sensor, nb_action_mc=81):
+    percent_lack_sensitive_sensors = round(sensor.get_percent_lack_sensitive_sensors() / 2.0)
+    percent_residual_energy = round(sensor.get_percent_residual_energy() / 2.0)
+
+    return [percent_residual_energy, percent_lack_sensitive_sensors, nb_action_mc]

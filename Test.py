@@ -61,7 +61,6 @@ for id_data in range(data_range):
         random.seed(nb_run)
         node_pos = list(literal_eval(df.node_pos[index]))
         list_node = []
-        list_optimizer_sensor = []
         for i in range(len(node_pos)):
             location = node_pos[i]
             com_ran = df.commRange[index]
@@ -72,13 +71,17 @@ for id_data in range(data_range):
             node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
                         energy_thresh=0.4 * energy_max, prob=prob)  # TODO: energy_thresh=0.4 * energy
             list_node.append(node)
-            list_optimizer_sensor.append(Q_LearningSensor(sensor=node, alpha=learning_rate, gamma=scale_factor))
         mc = MobileCharger(energy=df.E_mc[index], capacity=df.E_max[index], e_move=df.e_move[index],
                            e_self_charge=df.e_mc[index], velocity=df.velocity[index])
         target = [int(item) for item in df.target[index].split(',')]
         net = Network(list_node=list_node, mc=mc, target=target)
         print("test", len(net.node), len(net.target), max(net.target))
         q_learning = Q_learning(alpha=learning_rate, gamma=scale_factor)
+
+        list_optimizer_sensor = []
+        for i in range(len(list_node)):
+            list_optimizer_sensor.append(Q_LearningSensor(sensor=list_node[i], alpha=learning_rate, gamma=scale_factor, nb_action_mc=len(q_learning.action_list)))
+
         inma = Inma()
         gsa = GSA()
         if opt == "qlearning":

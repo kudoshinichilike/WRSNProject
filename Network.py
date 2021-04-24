@@ -56,56 +56,89 @@ class Network:
     def run_per_second(self, t, optimizer=None, list_optimizer_sensor = None):
         """
         simulate network per second
+        :param list_optimizer_sensor:
         :param t: current time
         :param optimizer: the optimizer used to calculate the next location of mc
         :return:
         """
-        if t < 100:
-            para.epsilon = 0.7
+        if t < 200:
+            para.epsilon = 0.8
         elif t < 500:
             para.epsilon = 0.5
         elif t < 1000:
             para.epsilon = 0.3
-        elif t < 10000:
-            para.epsilon = 0.2
         else:
             para.epsilon = 0.1
-
 
         state = self.communicate()
 
         request_id = []
         for index, node in enumerate(self.node):
+            node.is_receive_from_sensor = False
+            node.is_need_update = None
+
+            node.list_just_request = []
+            if t == 0:
+                node.average_used = node.just_used_energy
+            elif t % 50 == 0:
+                node.update_energy_thresh()
+                node.just_used_energy = 0.0
+
             if node.energy < node.energy_thresh:
                 node.request(network=self, mc=self.mc, t=t)
                 request_id.append(index)
             else:
                 node.is_request = False
+
         if request_id:
+            print("request_id", request_id)
             for index, node in enumerate(self.node):
-                if index not in request_id and (t - node.check_point[-1]["time"]) > 50:
+                if index in request_id:
+                    if node.list_just_request:
+                        sensor_charge = None
+                        max_charge_E = 0.0
+                        for sensor in node.list_just_request:
+                            print("request_id", max_charge_E, node.get_energy_charge_by_sensor(sensor))
+                            if max_charge_E < node.get_energy_charge_by_sensor(sensor):
+                                max_charge_E = node.get_energy_charge_by_sensor(sensor)
+                                sensor_charge = sensor
+
+                        if sensor_charge is not None:
+                            if sensor_charge.is_need_update is not None:
+                                sensor_charge.is_need_update.append(node)
+                            else:
+                                sensor_charge.is_need_update = []
+                                sensor_charge.is_need_update.append(node)
+
+                            for idx in range(len(sensor_charge.is_need_update)):
+                                print("xxxxx", sensor_charge.id, sensor_charge.is_need_update[idx].id)
+
+                elif index not in request_id and (t - node.check_point[-1]["time"]) > 50:
                     node.set_check_point(t)
-        if optimizer:
-            self.mc.run(network=self, time_stem=t, optimizer=optimizer)
 
         if list_optimizer_sensor:
             for idx, optimizer_sensor in enumerate(list_optimizer_sensor):
-                if optimizer_sensor.sensor.charging_time >= 1:
-                    optimizer_sensor.sensor.charge_to_another_sensor(1)
-                    optimizer_sensor.sensor.charging_time -= 1
-                elif optimizer_sensor.sensor.charging_time > para.delta:
-                    optimizer_sensor.sensor.charge_to_another_sensor(optimizer_sensor.sensor.charging_time)
-                    optimizer_sensor.sensor.charging_time = 0
-
-                if - para.delta <= optimizer_sensor.sensor.charging_time <= para.delta:
-                    optimizer_sensor.set_reward(network=self)
-                    optimizer_sensor.sensor.charging_time = para.sensor_no_charge
-
-                if optimizer_sensor.sensor.is_list_request_changed:
+                if optimizer_sensor.sensor.is_need_update is not None:
+                    print("is_need_update", idx)
                     if optimizer_sensor.sensor.charging_time != para.sensor_no_charge:
                         optimizer_sensor.set_reward(network=self)
-                    optimizer_sensor.update(self)
-                    optimizer_sensor.sensor.is_list_request_changed = False
+
+                    for sensor in optimizer_sensor.sensor.is_need_update:
+                        optimizer_sensor.sensor.list_request.append(sensor)
+                    optimizer_sensor.sensor.is_need_update = None
+                    optimizer_sensor.update(self, optimizer.state)
+
+                if optimizer_sensor.sensor.charging_time >= para.delta:
+                    optimizer_sensor.sensor.charge_to_another_sensor(1)
+                    optimizer_sensor.sensor.charging_time -= 1
+
+                if optimizer_sensor.sensor.charging_time < para.delta and optimizer_sensor.sensor.charging_time != para.sensor_no_charge:
+                    optimizer_sensor.set_reward(network=self)
+                    optimizer_sensor.sensor.charging_time = para.sensor_no_charge
+                    optimizer_sensor.sensor.list_request = []
+
+        if optimizer:
+            self.mc.run(network=self, time_stem=t, optimizer=optimizer)
 
         # for node in self.node:
         #     print("run_per_second", node.id, node.energy)
@@ -225,6 +258,16 @@ class Network:
             # print("find_min_node", node.id, node.energy)
             if node.energy >= max_energy:
                 max_energy = node.energy
+                max_id = node.id
+        return max_id
+
+    def find_max_used(self):
+        max_energy = -10 ** 10
+        max_id = -1
+        for node in self.node:
+            # print("find_min_node", node.id, node.energy)
+            if node.just_used_energy >= max_energy:
+                max_energy = node.just_used_energy
                 max_id = node.id
         return max_id
 

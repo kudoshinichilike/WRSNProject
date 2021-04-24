@@ -19,6 +19,7 @@ class Node:
         self.prob = prob  # probability of sending data
         self.check_point = [{"E_current": self.energy, "time": 0, "avg_e": 0.0}]  # check point of information of sensor
         self.used_energy = 0.0  # energy was used from last check point to now
+        self.just_used_energy = 0.0
         self.avg_energy = avg_energy  # average energy of sensor
         self.len_cp = len_cp  # length of check point list
         self.id = id  # identify of sensor
@@ -28,13 +29,16 @@ class Node:
         self.level = 0  # the distance from node to base
 
         self.list_request = []  # List sensor energy receive per second form this node > used per second
-        self.is_list_request_changed = False
         self.charging_time = para.sensor_no_charge
         self.charged_energy = 0
         self.charging_energy_original = 0
         self.residual_energy = 0
 
-        self.receive_energy = np.zeros(600, dtype=float)
+        self.receive_energy = np.zeros(605, dtype=float)
+        self.is_receive_from_sensor = False
+        self.list_just_request = []
+        self.is_need_update = None
+        self.average_used = 0.0
 
     def set_average_energy(self, func=estimate_average_energy):
         """
@@ -63,11 +67,15 @@ class Node:
         :param mc: mobile charger
         :return: the amount of energy mc charges to this sensor
         """
+        if self.is_receive_from_sensor:
+            return 0
+
         if self.energy <= self.energy_max - para.delta and mc.is_stand and self.is_active:
             d = distance.euclidean(self.location, mc.current)
             p_theory = para.alpha / (d + para.beta) ** 2
             p_actual = min(self.energy_max - self.energy, p_theory)
             self.energy = self.energy + p_actual
+            # print("charge by MC", p_actual, self.energy)
             return p_actual
         else:
             return 0
@@ -79,11 +87,13 @@ class Node:
         :param time: time charging to this
         :return: the amount of energy mc charges to this sensor
         """
-        if self.energy <= self.energy_max - para.delta:
+        if self.energy <= self.energy_max - para.delta and self.is_active:
+            self.is_receive_from_sensor = True
             d = distance.euclidean(self.location, sensor.location)
-            p_theory = (para.alpha / (d + para.beta) ** 2) * time
+            p_theory = (para.alpha_sensor / (d + para.beta_sensor) ** 2) * time / 5.0
             p_actual = min(self.energy_max - self.energy, p_theory)
             self.energy = self.energy + p_actual
+            print("charge_by_sensor", self.id, p_actual, self.energy)
             return p_actual
         else:
             return 0
@@ -97,7 +107,7 @@ class Node:
         """
         if self.energy <= self.energy_max - para.delta:
             d = distance.euclidean(self.location, sensor.location)
-            p_theory = (para.alpha / (d + para.beta) ** 2) * time
+            p_theory = (para.alpha_sensor / (d + para.beta_sensor) ** 2) * time / 5.0
             p_actual = min(self.energy_max - self.energy, p_theory)
             return p_actual
         else:
@@ -132,6 +142,7 @@ class Node:
                 e_send = para.ET + para.EFS * d ** 2 if d <= d0 else para.ET + para.EMP * d ** 4
                 self.energy -= e_send * package.size
                 self.used_energy += e_send * package.size
+                self.just_used_energy += e_send * package.size
                 net.node[receiver_id].receive(package)
                 net.node[receiver_id].send(net, package, receiver, is_energy_info)
         else:
@@ -140,6 +151,7 @@ class Node:
             e_send = para.ET + para.EFS * d ** 2 if d <= d0 else para.ET + para.EMP * d ** 4
             self.energy -= e_send * package.size
             self.used_energy += e_send * package.size
+            self.just_used_energy += e_send * package.size
             package.update_path(-1)
         self.check_active(net)
         # print("send id", self.id, "e_send", e_send, "energy", self.energy)
@@ -152,6 +164,7 @@ class Node:
         """
         self.energy -= para.ER * package.size
         self.used_energy += para.ER * package.size
+        self.just_used_energy += para.ER * package.size
 
     def check_active(self, net):
         """
@@ -291,3 +304,7 @@ class Node:
 
         self.charging_time = charging_time_list[0][0]
         return self.charging_time
+
+    def update_energy_thresh(self):
+        self.average_used = self.just_used_energy / 50
+        self.energy_thresh = self.average_used * 5000
