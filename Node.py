@@ -39,6 +39,7 @@ class Node:
         self.list_just_request = []
         self.is_need_update = None
         self.average_used = 0.0
+        self.needSetReward = False
 
     def set_average_energy(self, func=estimate_average_energy):
         """
@@ -67,9 +68,6 @@ class Node:
         :param mc: mobile charger
         :return: the amount of energy mc charges to this sensor
         """
-        if self.is_receive_from_sensor:
-            return 0
-
         if self.energy <= self.energy_max - para.delta and mc.is_stand and self.is_active:
             d = distance.euclidean(self.location, mc.current)
             p_theory = para.alpha / (d + para.beta) ** 2
@@ -87,13 +85,14 @@ class Node:
         :param time: time charging to this
         :return: the amount of energy mc charges to this sensor
         """
+        #TODO; charge den khi = thread
         if self.energy <= self.energy_max - para.delta and self.is_active:
             self.is_receive_from_sensor = True
             d = distance.euclidean(self.location, sensor.location)
             p_theory = (para.alpha_sensor / (d + para.beta_sensor) ** 2) * time / 5.0
             p_actual = min(self.energy_max - self.energy, p_theory)
             self.energy = self.energy + p_actual
-            print("charge_by_sensor", self.id, p_actual, self.energy)
+            # print("charge_by_sensor", self.id, p_actual, self.energy)
             return p_actual
         else:
             return 0
@@ -112,17 +111,6 @@ class Node:
             return p_actual
         else:
             return 0
-
-    def get_energy_charge_by_sensor(self, sensor, time=1):
-        """
-        charging to self by sensor
-        :param sensor: sensor charge to this
-        :param time: time charging to this
-        :return: the amount of energy mc charges to this sensor
-        """
-        d = distance.euclidean(self.location, sensor.location)
-        p_theory = (para.alpha / (d + para.beta) ** 2) * time
-        return p_theory
 
     def send(self, net=None, package=None, receiver=find_receiver, is_energy_info=False):
         """
@@ -254,6 +242,7 @@ class Node:
         :param time: time need to charge
         :return:
         """
+        self.needSetReward = True
         for sensor in self.list_request:
             if self.charged_energy + sensor.calE_charge_by_sensor(self, time) > self.residual_energy:
                 continue
@@ -262,6 +251,8 @@ class Node:
             self.energy -= charged_energy
             self.charged_energy += charged_energy
             sensor.receive_energy[self.id] += charged_energy
+            if charged_energy != 0:
+                self.needSetReward = False
 
         self.charging_time -= time
 

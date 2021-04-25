@@ -80,6 +80,8 @@ class Network:
             node.list_just_request = []
             if t == 0:
                 node.average_used = node.just_used_energy
+                node.update_energy_thresh()
+                node.just_used_energy = 0.0
             elif t % 50 == 0:
                 node.update_energy_thresh()
                 node.just_used_energy = 0.0
@@ -91,27 +93,34 @@ class Network:
                 node.is_request = False
 
         if request_id:
-            print("request_id", request_id)
+            # print("request_id", request_id)
             for index, node in enumerate(self.node):
                 if index in request_id:
                     if node.list_just_request:
-                        sensor_charge = None
-                        max_charge_E = 0.0
+                        # sensor_charge = None
+                        # max_charge_E = 0.0
                         for sensor in node.list_just_request:
-                            print("request_id", max_charge_E, node.get_energy_charge_by_sensor(sensor))
-                            if max_charge_E < node.get_energy_charge_by_sensor(sensor):
-                                max_charge_E = node.get_energy_charge_by_sensor(sensor)
-                                sensor_charge = sensor
-
-                        if sensor_charge is not None:
-                            if sensor_charge.is_need_update is not None:
-                                sensor_charge.is_need_update.append(node)
+                            if sensor.is_need_update is not None:
+                                sensor.is_need_update.append(node)
                             else:
-                                sensor_charge.is_need_update = []
-                                sensor_charge.is_need_update.append(node)
+                                sensor.is_need_update = []
+                                sensor.is_need_update.append(node)
 
-                            for idx in range(len(sensor_charge.is_need_update)):
-                                print("xxxxx", sensor_charge.id, sensor_charge.is_need_update[idx].id)
+                        # for sensor in node.list_just_request:
+                        #     print("request_id", max_charge_E, node.calE_charge_by_sensor(sensor))
+                        #     if max_charge_E < node.calE_charge_by_sensor(sensor):
+                        #         max_charge_E = node.calE_charge_by_sensor(sensor)
+                        #         sensor_charge = sensor
+
+                        # if sensor_charge is not None:
+                        #     if sensor_charge.is_need_update is not None:
+                        #         sensor_charge.is_need_update.append(node)
+                        #     else:
+                        #         sensor_charge.is_need_update = []
+                        #         sensor_charge.is_need_update.append(node)
+                        #
+                            # for idx in range(len(sensor_charge.is_need_update)):
+                            #     print("xxxxx", sensor_charge.id, sensor_charge.is_need_update[idx].id)
 
                 elif index not in request_id and (t - node.check_point[-1]["time"]) > 50:
                     node.set_check_point(t)
@@ -119,7 +128,7 @@ class Network:
         if list_optimizer_sensor:
             for idx, optimizer_sensor in enumerate(list_optimizer_sensor):
                 if optimizer_sensor.sensor.is_need_update is not None:
-                    print("is_need_update", idx)
+                    # print("is_need_update", idx)
                     if optimizer_sensor.sensor.charging_time != para.sensor_no_charge:
                         optimizer_sensor.set_reward(network=self)
 
@@ -131,6 +140,8 @@ class Network:
                 if optimizer_sensor.sensor.charging_time >= para.delta:
                     optimizer_sensor.sensor.charge_to_another_sensor(1)
                     optimizer_sensor.sensor.charging_time -= 1
+                    if optimizer_sensor.sensor.needSetReward:
+                        optimizer_sensor.sensor.charging_time = para.sensor_no_charge
 
                 if optimizer_sensor.sensor.charging_time < para.delta and optimizer_sensor.sensor.charging_time != para.sensor_no_charge:
                     optimizer_sensor.set_reward(network=self)
