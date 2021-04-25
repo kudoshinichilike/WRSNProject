@@ -68,10 +68,10 @@ class Node:
         :param mc: mobile charger
         :return: the amount of energy mc charges to this sensor
         """
-        if self.energy <= self.energy_max - para.delta and mc.is_stand and self.is_active:
+        if self.energy <= self.energy_thresh + para.delta and mc.is_stand and self.is_active:
             d = distance.euclidean(self.location, mc.current)
             p_theory = para.alpha / (d + para.beta) ** 2
-            p_actual = min(self.energy_max - self.energy, p_theory)
+            p_actual = min(self.energy_thresh - self.energy, p_theory)
             self.energy = self.energy + p_actual
             # print("charge by MC", p_actual, self.energy)
             return p_actual
@@ -85,12 +85,11 @@ class Node:
         :param time: time charging to this
         :return: the amount of energy mc charges to this sensor
         """
-        #TODO; charge den khi = thread
-        if self.energy <= self.energy_max - para.delta and self.is_active:
+        if self.energy <= self.energy_thresh + para.delta and self.is_active:
             self.is_receive_from_sensor = True
             d = distance.euclidean(self.location, sensor.location)
             p_theory = (para.alpha_sensor / (d + para.beta_sensor) ** 2) * time / 5.0
-            p_actual = min(self.energy_max - self.energy, p_theory)
+            p_actual = min(self.energy_thresh - self.energy, p_theory)
             self.energy = self.energy + p_actual
             # print("charge_by_sensor", self.id, p_actual, self.energy)
             return p_actual
