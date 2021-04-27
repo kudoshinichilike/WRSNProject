@@ -1,8 +1,5 @@
 import random
 from Package import Package
-from scipy.spatial import distance
-from Node_Method import find_receiver
-import Parameter as para
 
 
 def uniform_com_func(net):
@@ -47,34 +44,3 @@ def count_package_function(net):
         if package.path[-1] == -1:
             count += 1
     return count
-
-
-def get_path(net, sensor_id, receive_func=find_receiver):
-    """
-    getting path from sensor_id to base
-    :param net:
-    :param sensor_id:
-    :param receive_func:
-    :return:
-    """
-    path = [sensor_id]
-    if distance.euclidean(net.node[sensor_id].location, para.base) <= net.node[sensor_id].com_ran:
-        path.append(para.base)
-    else:
-        receive_id = receive_func(net=net, node=net.node[sensor_id])
-        if receive_id != -1:
-            path.extend(get_path(net, receive_id, receive_func))
-    return path
-
-
-def get_all_path(net, receive_func=find_receiver):
-    """
-    getting all paths from every target to base
-    :param net:
-    :param receive_func:
-    :return:
-    """
-    list_path = []
-    for sensor_id, target_id in enumerate(net.target):
-        list_path.append(get_path(net, sensor_id, receive_func))
-    return list_path
