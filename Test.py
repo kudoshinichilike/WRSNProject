@@ -68,7 +68,7 @@ for id_data in range(data_range):
             energy = df.energy[index]
             energy_max = df.energy[index]
             prob = df.freq[index]
-            energy = 4.1  # TODO:
+            energy = 4.2  # TODO:
             node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
                         energy_thresh=0.4 * energy_max, prob=prob)  # TODO: energy_thresh=0.4 * energy
             list_node.append(node)

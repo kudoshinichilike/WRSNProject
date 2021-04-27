@@ -82,7 +82,7 @@ class Network:
                 node.average_used = node.just_used_energy
                 node.update_energy_thresh()
                 node.just_used_energy = 0.0
-            elif t % 50 == 0:
+            elif t % 20 == 0:
                 node.update_energy_thresh()
                 node.just_used_energy = 0.0
 
