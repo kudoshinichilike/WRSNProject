@@ -16,7 +16,7 @@ import sys
 read_file = "thaydoisotarget"
 write_file = "try"
 data_range = 1
-data_start = 4
+data_start = 2
 run_range = 1
 learning_rate = 0.1
 scale_factor = 0.9
@@ -26,7 +26,7 @@ try:
 except:
     opt = "qlearning"
 try:
-    max_time = 1000000
+    max_time = 10000000
 except:
     max_time = None
 
@@ -68,7 +68,7 @@ for id_data in range(data_range):
             energy = df.energy[index]
             energy_max = df.energy[index]
             prob = df.freq[index]
-            energy = 4.2  # TODO:
+            energy = energy_max
             node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
                         energy_thresh=0.4 * energy_max, prob=prob)  # TODO: energy_thresh=0.4 * energy
             list_node.append(node)

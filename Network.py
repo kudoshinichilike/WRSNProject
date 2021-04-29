@@ -17,6 +17,8 @@ class Network:
         self.set_level()  # set the distance in graph from each node to base
         self.mc = mc  # mobile charger
         self.target = target  # list of target. each item is index of sensor where target is located
+        self.nb_pack = 0
+        self.nb_pack_sent = 0
 
     def set_neighbor(self):
         """
@@ -61,6 +63,10 @@ class Network:
         :param optimizer: the optimizer used to calculate the next location of mc
         :return:
         """
+
+        self.nb_pack = 0
+        self.nb_pack_sent = 0
+
         if t < 200:
             para.epsilon = 0.8
         elif t < 500:
@@ -193,7 +199,7 @@ class Network:
         """
         information_log = open(file_name, "w")
         # writer = csv.DictWriter(information_log, fieldnames=["time", "nb dead", "nb package"])
-        writer = csv.DictWriter(information_log, fieldnames=["time", "mc location", "mc energy", "min energy", "max energy", "max charge"])
+        writer = csv.DictWriter(information_log, fieldnames=["time", "mc location", "mc energy", "min energy", "max energy", "max charge", "nb_dead", "nb_pack"])
         writer.writeheader()
         nb_dead = 0
         nb_package = len(self.target)
@@ -209,16 +215,17 @@ class Network:
             # print("enery", eee)
 
             current_dead = self.count_dead_node()
-            current_package = self.count_package()
-            if current_dead != nb_dead or current_package != nb_package:
-                nb_dead = current_dead
-                nb_package = current_package
+            nb_dead = current_dead
+            # current_package = self.count_package()
+            # if current_dead != nb_dead or current_package != nb_package:
+            #     nb_dead = current_dead
+            #     nb_package = current_package
             #     writer.writerow({"time": t, "nb dead": nb_dead, "nb package": nb_package})
             node_min_energy = self.node[self.find_min_node()]
             node_max_energy = self.node[self.find_max_node()]
-            print("min_energy", node_min_energy.id, node_min_energy.energy, "max_energy", node_max_energy.id, node_max_energy.energy)
+            print("min_energy", node_min_energy.id, node_min_energy.energy, "max_energy", node_max_energy.id, node_max_energy.energy, "current_dead", current_dead, "nb_pack", self.nb_pack-self.nb_pack_sent)
             writer.writerow(
-                {"time": t, "mc location": self.mc.current, "mc energy": self.mc.energy, "min energy": node_min_energy.energy, "max energy": node_max_energy.energy, "max charge": self.node[self.find_max_node_charging()].charging_time})
+                {"time": t, "mc location": self.mc.current, "mc energy": self.mc.energy, "min energy": node_min_energy.energy, "max energy": node_max_energy.energy, "max charge": self.node[self.find_max_node_charging()].charging_time, "nb_dead": current_dead, "nb_pack": self.nb_pack-self.nb_pack_sent})
         information_log.close()
         return t
 
