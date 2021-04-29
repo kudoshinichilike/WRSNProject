@@ -57,9 +57,9 @@ import sys
 
 read_file = "thaydoisotarget"
 write_file = "try"
-data_range = 1
-data_start = 4
-run_range = 1
+data_range = 4
+data_start = 2
+run_range = 3
 learning_rate = 0.01
 scale_factor = 0.9
 
@@ -69,7 +69,7 @@ try:
 except:
     opt = "qlearning"
 try:
-    max_time = 10000
+    max_time = 10000000
 except:
     max_time = None
 
@@ -93,7 +93,7 @@ for id_data in range(data_range):
             energy = df.energy[index]
             energy_max = df.energy[index]
             prob = df.freq[index]
-            energy = 4.2  # TODO:
+            energy = energy_max
             node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
                         energy_thresh=0.4 * energy_max, prob=prob)  # TODO: energy_thresh=0.4 * energy
             # node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
@@ -116,7 +116,7 @@ for id_data in range(data_range):
         elif opt == "none":
             optimizer = None
         file_name = "log/q_learning_" + str(index) + ".csv"
-        temp = net.simulate(optimizer=optimizer, file_name=file_name, max_time=max_time)
+        temp = net.simulate(optimizer=optimizer, file_name=file_name, max_time=max_time, nb_run=nb_run)
         life_time.append(temp)
         result.writerow({"nb run": nb_run, "lifetime": temp})
         print("done run = ", nb_run)

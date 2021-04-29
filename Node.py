@@ -17,6 +17,7 @@ class Node:
         self.prob = prob  # probability of sending data
         self.check_point = [{"E_current": self.energy, "time": 0, "avg_e": 0.0}]  # check point of information of sensor
         self.used_energy = 0.0  # energy was used from last check point to now
+        self.just_used_energy = 0.0
         self.avg_energy = avg_energy  # average energy of sensor
         self.len_cp = len_cp  # length of check point list
         self.id = id  # identify of sensor
@@ -24,6 +25,7 @@ class Node:
         self.is_active = is_active  # statement of sensor. If sensor dead, state is False
         self.is_request = False  # if node requested, is_request = True
         self.level = 0  # the distance from node to base
+        self.average_used = 0.0
 
     def set_average_energy(self, func=estimate_average_energy):
         """
@@ -70,6 +72,7 @@ class Node:
         :param is_energy_info: if this package is energy package, is_energy_info will be true
         :return: send package to the next node and reduce energy of this node
         """
+
         d0 = math.sqrt(para.EFS / para.EMP)
         package.update_path(self.id)
         if distance.euclidean(self.location, para.base) > self.com_ran:
@@ -78,6 +81,7 @@ class Node:
                 d = distance.euclidean(self.location, net.node[receiver_id].location)
                 e_send = para.ET + para.EFS * d ** 2 if d <= d0 else para.ET + para.EMP * d ** 4
                 self.energy -= e_send * package.size
+                self.just_used_energy += e_send * package.size
                 self.used_energy += e_send * package.size
                 net.node[receiver_id].receive(package)
                 net.node[receiver_id].send(net, package, receiver, is_energy_info)
@@ -86,8 +90,10 @@ class Node:
             d = distance.euclidean(self.location, para.base)
             e_send = para.ET + para.EFS * d ** 2 if d <= d0 else para.ET + para.EMP * d ** 4
             self.energy -= e_send * package.size
+            self.just_used_energy += e_send * package.size
             self.used_energy += e_send * package.size
             package.update_path(-1)
+
         self.check_active(net)
 
     def receive(self, package):
@@ -98,6 +104,7 @@ class Node:
         """
         self.energy -= para.ER * package.size
         self.used_energy += para.ER * package.size
+        self.just_used_energy += para.ER * package.size
 
     def check_active(self, net):
         """
@@ -132,3 +139,7 @@ class Node:
         :return:
         """
         func(self)
+
+    def update_energy_thresh(self):
+        self.average_used = self.just_used_energy / 20
+        self.energy_thresh = self.average_used * 2000

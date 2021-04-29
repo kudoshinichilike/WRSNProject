@@ -228,24 +228,24 @@ def get_charging_time(network=None, q_learning=None, state=None, alpha=0):
     """
     # request_id = [request["id"] for request in network.mc.list_request]
     time_move = distance.euclidean(network.mc.current, q_learning.action_list[state]) / network.mc.velocity
-    energy_min = network.node[0].energy_thresh + alpha * network.node[0].energy_max
+    # energy_min = network.node[0].energy_thresh + alpha * network.node[0].energy_max
     s1 = []  # list of node in request list which has positive charge
     s2 = []  # list of node not in request list which has negative charge
     for node in network.node:
         d = distance.euclidean(q_learning.action_list[state], node.location)
         p = para.alpha / (d + para.beta) ** 2
-        if node.energy - time_move * node.avg_energy < energy_min and p - node.avg_energy > 0:
+        if node.energy - time_move * node.average_used < node.energy_thresh and p - node.average_used > 0:
             s1.append((node.id, p))
-        if node.energy - time_move * node.avg_energy > energy_min and p - node.avg_energy < 0:
+        if node.energy - time_move * node.average_used > node.energy_thresh and p - node.average_used < 0:
             s2.append((node.id, p))
     t = []
 
     for index, p in s1:
-        t.append((energy_min - network.node[index].energy + time_move * network.node[index].avg_energy) / (
-                p - network.node[index].avg_energy))
+        t.append((network.node[index].energy_thresh - network.node[index].energy + time_move * network.node[index].average_used) / (
+                p - network.node[index].average_used))
     for index, p in s2:
-        t.append((energy_min - network.node[index].energy + time_move * network.node[index].avg_energy) / (
-                p - network.node[index].avg_energy))
+        t.append((network.node[index].energy_thresh - network.node[index].energy + time_move * network.node[index].average_used) / (
+                p - network.node[index].average_used))
     dead_list = []
     for item in t:
         nb_dead = 0
@@ -255,14 +255,14 @@ def get_charging_time(network=None, q_learning=None, state=None, alpha=0):
         #     if temp < energy_min:
         #         nb_dead += 1
         for index, p in s1:
-            temp = network.node[index].energy - time_move * network.node[index].avg_energy + (
-                        p - network.node[index].avg_energy) * item
-            if temp < energy_min:
+            temp = network.node[index].energy - time_move * network.node[index].average_used + (
+                        p - network.node[index].average_used) * item
+            if temp < network.node[index].energy_thresh:
                 nb_dead += 1
         for index, p in s2:
-            temp = network.node[index].energy - time_move * network.node[index].avg_energy + (
-                        p - network.node[index].avg_energy) * item
-            if temp < energy_min:
+            temp = network.node[index].energy - time_move * network.node[index].average_used + (
+                        p - network.node[index].average_used) * item
+            if temp < network.node[index].energy_thresh:
                 nb_dead += 1
         dead_list.append(nb_dead)
     arg_min = np.argmin(dead_list)

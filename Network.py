@@ -14,6 +14,8 @@ class Network:
         self.set_level()  # set the distance in graph from each node to base
         self.mc = mc  # mobile charger
         self.target = target  # list of target. each item is index of sensor where target is located
+        self.nb_pack = 0
+        self.nb_pack_sent = 0
 
     def set_neighbor(self):
         """
@@ -57,9 +59,19 @@ class Network:
         :param optimizer: the optimizer used to calculate the next location of mc
         :return:
         """
+        self.nb_pack = 0
+        self.nb_pack_sent = 0
         state = self.communicate()
         request_id = []
         for index, node in enumerate(self.node):
+            if t == 0:
+                node.average_used = node.just_used_energy
+                node.update_energy_thresh()
+                node.just_used_energy = 0.0
+            elif t % 20 == 0:
+                node.update_energy_thresh()
+                node.just_used_energy = 0.0
+
             if node.energy < node.energy_thresh:
                 node.request(mc=self.mc, t=t)
                 request_id.append(index)
@@ -99,47 +111,57 @@ class Network:
         energy_log.close()
         return t
 
-    def simulate_max_time(self, optimizer=None, max_time=10**6, file_name="log/information_log.csv"):
+    def simulate_max_time(self, optimizer=None, max_time=10**6, file_name="log/information_log.csv", nb_run = 0):
         """
         simulate process finish when current time is more than the max_time
+        :param nb_run:
         :param optimizer:
         :param max_time:
         :param file_name:
         :return:
         """
+        file_name = "log/information_log" + str(nb_run) + ".csv"
         print("simulate_max_time", file_name)
         information_log = open(file_name, "w")
-        writer = csv.DictWriter(information_log, fieldnames=["time", "nb dead", "nb package"])
+        writer = csv.DictWriter(information_log, fieldnames=["time", "nb dead", "nb package", "min E", "max E"])
         writer.writeheader()
         nb_dead = 0
         nb_package = len(self.target)
         t = 0
         while t <= max_time and nb_package > 0:
             t += 1
-            if (t-1) % 1000 == 0:
-                print(t, self.mc.current, self.node[self.find_min_node()].energy)
             state = self.run_per_second(t, optimizer)
             current_dead = self.count_dead_node()
-            current_package = self.count_package()
-            if current_dead != nb_dead or current_package != nb_package:
-                nb_dead = current_dead
-                nb_package = current_package
-            print("simulate_max_time", t, self.node[self.find_min_node()].energy, self.node[self.find_max_node()].energy)
-            writer.writerow({"time": t, "nb dead": nb_dead, "nb package": nb_package})
+            current_package = self.nb_pack
+
+            print("simulate_max_time", t, "min E", self.node[self.find_min_node()].energy,
+                  "max E", self.node[self.find_max_node()].energy, "current_dead", current_dead,
+                  "current_package", self.nb_pack - self.nb_pack_sent)
+            writer.writerow({"time": t, "nb dead": nb_dead, "nb package": self.nb_pack - self.nb_pack_sent,
+                             "min E": self.node[self.find_min_node()].energy,
+                             "max E": self.node[self.find_max_node()].energy})
+
+            if self.nb_pack != self.nb_pack_sent:
+                break
+            # if current_dead != nb_dead or current_package != nb_package:
+            #     nb_dead = current_dead
+            #     nb_package = current_package
+            #     break
 
         information_log.close()
         return t
 
-    def simulate(self, optimizer=None, max_time=None, file_name="log/energy_log.csv"):
+    def simulate(self, optimizer=None, max_time=None, file_name="log/energy_log.csv", nb_run = 0):
         """
         simulate in general. if max_time is not none, simulate_max_time will be called
+        :param nb_run:
         :param optimizer:
         :param max_time:
         :param file_name:
         :return:
         """
         if max_time:
-            t = self.simulate_max_time(optimizer=optimizer, max_time=max_time)
+            t = self.simulate_max_time(optimizer=optimizer, max_time=max_time, nb_run = nb_run)
         else:
             t = self.simulate_lifetime(optimizer=optimizer)
         return t
