@@ -57,9 +57,9 @@ import sys
 
 read_file = "thaydoisotarget"
 write_file = "try"
-data_range = 4
-data_start = 2
-run_range = 3
+data_range = 5
+data_start = 0
+run_range = 1
 learning_rate = 0.01
 scale_factor = 0.9
 
@@ -74,7 +74,7 @@ except:
     max_time = None
 
 df = pd.read_csv(read_name)
-for id_data in range(data_range):
+for id_data in range(4, data_range):
     index = id_data + data_start
     print("nb data = ", index)
     write_name = "log/" + write_file + str(index) + ".csv"
