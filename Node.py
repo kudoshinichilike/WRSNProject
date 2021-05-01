@@ -298,4 +298,4 @@ class Node:
     def update_energy_thresh(self):
         self.average_used = self.just_used_energy / 20
         self.energy_thresh = self.average_used * 2000
-        print("update_energy_thresh", self.energy_thresh)
+        # print("update_energy_thresh", self.energy_thresh)

@@ -67,11 +67,9 @@ class Network:
         self.nb_pack = 0
         self.nb_pack_sent = 0
 
-        if t < 200:
-            para.epsilon = 0.8
-        elif t < 500:
+        if t < 7000:
             para.epsilon = 0.5
-        elif t < 1000:
+        elif t < 10000:
             para.epsilon = 0.3
         else:
             para.epsilon = 0.1
@@ -99,7 +97,7 @@ class Network:
                 node.is_request = False
 
         if request_id:
-            # print("request_id", request_id)
+            print("request_id", request_id)
             for index, node in enumerate(self.node):
                 if index in request_id:
                     if node.list_just_request:
@@ -134,7 +132,7 @@ class Network:
         if list_optimizer_sensor:
             for idx, optimizer_sensor in enumerate(list_optimizer_sensor):
                 if optimizer_sensor.sensor.is_need_update is not None:
-                    # print("is_need_update", idx)
+                    print("is_need_update", idx)
                     if optimizer_sensor.sensor.charging_time != para.sensor_no_charge:
                         optimizer_sensor.set_reward(network=self)
 
@@ -188,7 +186,7 @@ class Network:
         energy_log.close()
         return t
 
-    def simulate_max_time(self, optimizer=None, list_optimizer_sensor=None, max_time=50, file_name="log/information_log.csv"):
+    def simulate_max_time(self, optimizer=None, list_optimizer_sensor=None, max_time=50, file_name="log/information_log.csv", index=1, nb_run=0):
         """
         simulate process finish when current time is more than the max_time
         :param optimizer:
@@ -197,7 +195,7 @@ class Network:
         :param file_name:
         :return:
         """
-        information_log = open(file_name, "w")
+        information_log = open(file_name + str(index) + "_" + str(nb_run), "w")
         # writer = csv.DictWriter(information_log, fieldnames=["time", "nb dead", "nb package"])
         writer = csv.DictWriter(information_log, fieldnames=["time", "mc location", "mc energy", "min energy", "max energy", "max charge", "nb_dead", "nb_pack"])
         writer.writeheader()
@@ -226,19 +224,22 @@ class Network:
             print("min_energy", node_min_energy.id, node_min_energy.energy, "max_energy", node_max_energy.id, node_max_energy.energy, "current_dead", current_dead, "nb_pack", self.nb_pack-self.nb_pack_sent)
             writer.writerow(
                 {"time": t, "mc location": self.mc.current, "mc energy": self.mc.energy, "min energy": node_min_energy.energy, "max energy": node_max_energy.energy, "max charge": self.node[self.find_max_node_charging()].charging_time, "nb_dead": current_dead, "nb_pack": self.nb_pack-self.nb_pack_sent})
+            if self.nb_pack-self.nb_pack_sent > 0:
+                break
         information_log.close()
         return t
 
-    def simulate(self, optimizer=None, list_optimizer_sensor=None, max_time=None, file_name="log/energy_log.csv"):
+    def simulate(self, optimizer=None, list_optimizer_sensor=None, max_time=None, file_name="log/energy_log.csv", index=2, nb_run=0):
         """
         simulate in general. if max_time is not none, simulate_max_time will be called
+        :param index:
         :param optimizer:
         :param max_time:
         :param file_name:
         :return:
         """
         if max_time:
-            t = self.simulate_max_time(optimizer=optimizer, list_optimizer_sensor=list_optimizer_sensor, max_time=max_time)
+            t = self.simulate_max_time(optimizer=optimizer, list_optimizer_sensor=list_optimizer_sensor, max_time=max_time, index = index, nb_run = nb_run)
         else:
             t = self.simulate_lifetime(optimizer=optimizer, list_optimizer_sensor=list_optimizer_sensor, file_name=file_name)
         return t

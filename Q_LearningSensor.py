@@ -79,7 +79,7 @@ class Q_LearningSensor:
         :param state:
         :return: action is percent energy will charge in max q_table
         """
-        if state[0] == 0 or state[1] == 0:
+        if state[0] == 0:
             return 0
 
         if random.uniform(0, 1) < para.epsilon:
