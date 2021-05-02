@@ -84,7 +84,7 @@ for id_data in range(4, data_range):
     life_time = []
     for nb_run in range(run_range):
         print("nb run = ", nb_run)
-        random.seed(nb_run)
+        random.seed(run_range)
         node_pos = list(literal_eval(df.node_pos[index]))
         list_node = []
         for i in range(len(node_pos)):
