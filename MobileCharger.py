@@ -88,12 +88,14 @@ class MobileCharger:
         :param optimizer: the optimizer to find next location and time to charge at there
         :return:
         """
-        # print(self.energy, self.start, self.end, self.current)
         if (not self.is_active and self.list_request) or abs(
                 time_stem - self.end_time) < 1:
             self.is_active = True
-            self.list_request = [request for request in self.list_request if
-                                 network.node[request["id"]].energy < network.node[request["id"]].energy_thresh]
+            for request in self.list_request:
+                if not network.node[request["id"]].energy < network.node[request["id"]].energy_thresh:
+                    network.node[request["id"]].is_request = False
+                    self.list_request.remove(request)
+
             if not self.list_request:
                 self.is_active = False
             self.get_next_location(network=network, time_stem=time_stem, optimizer=optimizer)

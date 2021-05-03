@@ -186,7 +186,7 @@ class Network:
         energy_log.close()
         return t
 
-    def simulate_max_time(self, optimizer=None, list_optimizer_sensor=None, max_time=50, file_name="log/information_log.csv", index=1, nb_run=0):
+    def simulate_max_time(self, optimizer=None, list_optimizer_sensor=None, max_time=50, file_name="log/information_log", index=1, nb_run=0):
         """
         simulate process finish when current time is more than the max_time
         :param optimizer:
@@ -195,7 +195,7 @@ class Network:
         :param file_name:
         :return:
         """
-        information_log = open(file_name + str(index) + "_" + str(nb_run), "w")
+        information_log = open(file_name + str(index) + "_" + str(nb_run)+".csv", "w")
         # writer = csv.DictWriter(information_log, fieldnames=["time", "nb dead", "nb package"])
         writer = csv.DictWriter(information_log, fieldnames=["time", "mc location", "mc energy", "min energy", "max energy", "max charge", "nb_dead", "nb_pack"])
         writer.writeheader()

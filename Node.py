@@ -296,6 +296,7 @@ class Node:
         return self.charging_time
 
     def update_energy_thresh(self):
-        self.average_used = self.just_used_energy / 20
-        self.energy_thresh = self.average_used * 2000
+        # self.average_used = self.just_used_energy / 20
+        # self.energy_thresh = self.average_used * 2000
+        self.energy_thresh = self.energy_max * 0.4
         # print("update_energy_thresh", self.energy_thresh)
