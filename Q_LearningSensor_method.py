@@ -8,7 +8,7 @@ from Network_Method import get_all_path
 from Node_Method import find_receiver
 
 
-def reward_function(sensor, network, receive_func=find_receiver):
+def reward_function(sensor, network):
     """
     calculate reward function
     :param sensor:
@@ -16,16 +16,16 @@ def reward_function(sensor, network, receive_func=find_receiver):
     :param receive_func:
     :return: reward
     """
-    # get_weight
     all_path = get_all_path(network)
     weight_sensor = sensor.get_weight(network, all_path)
 
     if weight_sensor == 0:
-        return para.max_default
+        reward = sensor.charging_to_sensor.get_weight(network, all_path)*sensor.charging_to_sensor.calE_charge_by_sensor(sensor, 1)
+    else:
+        reward = (sensor.charging_to_sensor.get_weight(network, all_path) / weight_sensor)*sensor.charging_to_sensor.calE_charge_by_sensor(sensor, 1)
 
-    reward = 0
-    for node in sensor.list_request:
-        reward += node.receive_energy[sensor.id] * node.get_weight(network, all_path) / weight_sensor
+    if sensor.get_lack_energy() > 0:
+        reward -= sensor.get_lack_energy()
 
     return reward
 
@@ -36,7 +36,7 @@ def init_q_table_function():
     :param nb_action:
     :return:
     """
-    q_table = np.zeros((para.state_dimension1 + 1, para.state_dimension2 + 1, para.number_action + 1), dtype=float)
+    q_table = np.zeros((para.state_dimension1 + 2, para.state_dimension2 + 2, para.number_action + 2), dtype=float)
     # for state_sensor in range (101):
     #         q_table[state_sensor][0][0] = 1000
 

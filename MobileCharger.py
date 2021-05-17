@@ -78,7 +78,7 @@ class MobileCharger:
         self.end = next_location
         moving_time = distance.euclidean(self.start, self.end) / self.velocity
         self.end_time = time_stem + moving_time + charging_time
-        print("get_next_location", next_location, charging_time)
+        # print("get_next_location", next_location, charging_time)
 
     def run(self, network, time_stem, optimizer=None):
         """
@@ -91,22 +91,27 @@ class MobileCharger:
         # print(self.energy, self.start, self.end, self.current)
         if (not self.is_active and self.list_request) or abs(
                 time_stem - self.end_time) < 1:
-            self.is_active = True
-            self.list_request = [request for request in self.list_request if
-                                 network.node[request["id"]].energy < network.node[request["id"]].energy_thresh]
+            for request in self.list_request:
+                if not network.node[request["id"]].energy < network.node[request["id"]].energy_thresh:
+                    network.node[request["id"]].is_request = False
+                    self.list_request.remove(request)
+
             if not self.list_request:
                 self.is_active = False
+            else:
+                self.is_active = True
+
             self.get_next_location(network=network, time_stem=time_stem, optimizer=optimizer)
         else:
             if self.is_active:
                 if not self.is_stand:
-                    print("moving")
+                    # print("moving")
                     self.update_location()
                 elif not self.is_self_charge:
-                    print("charging")
+                    # print("charging")
                     self.charge(network)
                 else:
-                    print("self charging")
+                    # print("self charging")
                     self.self_charge()
         if self.energy < para.E_mc_thresh and not self.is_self_charge and self.end != para.depot:
             self.start = self.current

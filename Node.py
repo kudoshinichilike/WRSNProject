@@ -4,7 +4,7 @@ import numpy as np
 from scipy.spatial import distance
 
 import Parameter as para
-from Node_Method import to_string, find_receiver, request_function, estimate_average_energy
+from Node_Method import to_string, find_receiver, request_function, estimate_average_energy, request_to_neighbor_function
 
 
 class Node:
@@ -16,6 +16,7 @@ class Node:
         self.energy = float(energy)  # energy of sensor
         self.energy_max = energy_max  # capacity of sensor
         self.energy_thresh = energy_thresh  # threshold to sensor send request for mc
+        self.energy_thresh_weight = energy_thresh  # threshold to sensor send request for mc
         self.prob = prob  # probability of sending data
         self.check_point = [{"E_current": self.energy, "time": 0, "avg_e": 0.0}]  # check point of information of sensor
         self.used_energy = 0.0  # energy was used from last check point to now
@@ -28,18 +29,19 @@ class Node:
         self.is_request = False  # if node requested, is_request = True
         self.level = 0  # the distance from node to base
 
-        self.list_request = []  # List sensor energy receive per second form this node > used per second
+        self.list_request = []  # list sensor just request
+        self.charging_to_sensor = None
         self.charging_time = para.sensor_no_charge
         self.charged_energy = 0
         self.charging_energy_original = 0
         self.residual_energy = 0
 
-        self.receive_energy = np.zeros(605, dtype=float)
-        self.is_receive_from_sensor = False
-        self.list_just_request = []
-        self.is_need_update = None
-        self.average_used = 0.0
-        self.needSetReward = False
+        self.charging_from_sensor = False
+        self.request_to_sensor = -1 # -2 - dang sac, -1 - haven't request, # time to next request
+        self.neighbor_charge = []
+        self.optimizer = None
+        self.average_used = 0
+
 
     def set_average_energy(self, func=estimate_average_energy):
         """
@@ -68,12 +70,11 @@ class Node:
         :param mc: mobile charger
         :return: the amount of energy mc charges to this sensor
         """
-        if self.energy <= self.energy_thresh + para.delta and mc.is_stand and self.is_active:
+        if self.energy <= self.energy_max and mc.is_stand and self.is_active:
             d = distance.euclidean(self.location, mc.current)
             p_theory = para.alpha / (d + para.beta) ** 2
-            p_actual = min(self.energy_thresh - self.energy, p_theory)
+            p_actual = min(self.energy_max - self.energy, p_theory)
             self.energy = self.energy + p_actual
-            # print("charge by MC", p_actual, self.energy)
             return p_actual
         else:
             return 0
@@ -85,11 +86,10 @@ class Node:
         :param time: time charging to this
         :return: the amount of energy mc charges to this sensor
         """
-        if self.energy <= self.energy_thresh + para.delta and self.is_active:
-            self.is_receive_from_sensor = True
+        if self.energy <= self.energy_max + para.delta:
             d = distance.euclidean(self.location, sensor.location)
-            p_theory = (para.alpha_sensor / (d + para.beta_sensor) ** 2) * time / 5.0
-            p_actual = min(self.energy_thresh - self.energy, p_theory)
+            p_theory = (para.alpha_sensor / (d + para.beta_sensor) ** 2) * time * para.charge_rate
+            p_actual = min(self.energy_max - self.energy, p_theory)
             self.energy = self.energy + p_actual
             # print("charge_by_sensor", self.id, p_actual, self.energy)
             return p_actual
@@ -105,7 +105,7 @@ class Node:
         """
         if self.energy <= self.energy_max - para.delta:
             d = distance.euclidean(self.location, sensor.location)
-            p_theory = (para.alpha_sensor / (d + para.beta_sensor) ** 2) * time / 5.0
+            p_theory = (para.alpha_sensor / (d + para.beta_sensor) ** 2) * time * para.charge_rate
             p_actual = min(self.energy_max - self.energy, p_theory)
             return p_actual
         else:
@@ -159,13 +159,13 @@ class Node:
         :param net: the network
         :return: None
         """
-        if self.energy < 0 or len(self.neighbor) == 0:
+        if self.energy <= 0 or len(self.neighbor) == 0:
             self.is_active = False
         else:
             a = [1 for neighbor in self.neighbor if net.node[neighbor].is_active]
             self.is_active = True if len(a) > 0 else False
 
-    def request(self, network, mc, t, request_func=request_function):
+    def request(self, mc, t, request_func=request_function):
         """
         send a message to mc if the energy is below a threshold
         :param network:
@@ -177,8 +177,17 @@ class Node:
         self.set_check_point(t)
         # print(self.check_point)
         if not self.is_request:
-            request_func(self, network, mc, t)
+            request_func(self, mc, t)
             self.is_request = True
+
+    def update_request(self, network, request_to_neighbor_func = request_to_neighbor_function):
+        if self.energy <= 0:
+            return
+
+        if self.request_to_sensor == 0:
+            request_to_neighbor_func(node=self, network=network)
+        elif self.request_to_sensor > 0:
+            self.request_to_sensor = self.request_to_sensor - 1
 
     def print_node(self, func=to_string):
         """
@@ -189,21 +198,23 @@ class Node:
         func(self)
 
     def get_percent_residual_energy(self):
-        if self.energy > self.energy_thresh:
-            return round((self.energy - self.energy_thresh) / self.energy_max * 100)
+        if self.energy > self.energy_thresh_weight:
+            return round((self.energy - self.energy_thresh_weight) / self.energy_max * 100)
+        return 0
 
+    def get_residual_energy(self):
+        if self.energy > self.energy_thresh_weight:
+            return self.energy - self.energy_thresh_weight
         return 0
 
     def get_percent_lack_energy(self):
-        if self.energy < self.energy_thresh:
-            return round((self.energy_thresh - self.energy) / self.energy_max * 100)
-
+        if self.energy < self.energy_thresh_weight:
+            return round((self.energy_thresh_weight - self.energy) / self.energy_max * 100)
         return 0
 
     def get_lack_energy(self):
-        if self.energy < self.energy_thresh:
-            return self.energy_thresh - self.energy
-
+        if self.energy < self.energy_thresh_weight:
+            return self.energy_thresh_weight - self.energy
         return 0
 
     def get_energy_max(self):
@@ -231,9 +242,7 @@ class Node:
         return self.weight
 
     def is_lack_energy(self):
-        # if self.energy < self.energy_thresh:
-        # print("Node is_lack_energy", self.energy < self.energy_thresh)
-        return self.energy < self.energy_thresh
+        return self.energy < self.energy_thresh_weight
 
     def charge_to_another_sensor(self, time):
         """
@@ -241,61 +250,16 @@ class Node:
         :param time: time need to charge
         :return:
         """
-        self.needSetReward = True
-        for sensor in self.list_request:
-            if self.charged_energy + sensor.calE_charge_by_sensor(self, time) > self.residual_energy:
-                continue
+        charged_energy = self.charging_to_sensor.charge_by_sensor(self, time)
+        # print("sensor_charge charge_to_another_sensor", charged_energy)
+        self.energy -= charged_energy
+        self.charged_energy += charged_energy
 
-            charged_energy = sensor.charge_by_sensor(self, time)
-            self.energy -= charged_energy
-            self.charged_energy += charged_energy
-            sensor.receive_energy[self.id] += charged_energy
-            if charged_energy != 0:
-                self.needSetReward = False
-
-        self.charging_time -= time
-
-    def get_residual_energy(self):
-        if self.energy > self.energy_thresh:
-            return self.energy - self.energy_thresh
-
-        return 0
-
-    def get_time_charging(self, action):
-        self.charging_energy_original = self.get_residual_energy() / 100.0 * action
-
-        charging_time_list = []
-
-        for sensitive_effect_sensor in self.list_request:
-            energy_need_charge = sensitive_effect_sensor.energy_thresh - sensitive_effect_sensor.energy
-            energy_charge_per_second = sensitive_effect_sensor.calE_charge_by_sensor(self)
-            charging_time_list.append([energy_need_charge / energy_charge_per_second, energy_charge_per_second])
-
-        charging_time_list = sorted(charging_time_list, key=lambda x: x[1], reverse=True)
-        energy_charge = np.zeros(len(charging_time_list), dtype=float)
-
-        for idx in range(len(charging_time_list)):
-            if not idx == 0:
-                energy_charge[idx] = energy_charge[idx - 1] + charging_time_list[idx][1]
-            else:
-                energy_charge[idx] = charging_time_list[idx][1]
-
-        for idx in range(len(charging_time_list) - 1, -1, -1):
-            if idx != 0 and (charging_time_list[idx][0] - para.delta <= charging_time_list[idx - 1][0] <= charging_time_list[idx][0] + para.delta):
-                continue
-
-            energy_charge_sum = energy_charge[idx] * charging_time_list[idx][0]
-            if energy_charge_sum >= self.charging_energy_original - para.delta:
-                energy_charge_sum = 0 if idx == (len(charging_time_list) - 1) else energy_charge[idx + 1] * charging_time_list[idx + 1][0]
-                self.charging_time = 0 if idx == (len(charging_time_list) - 1) else charging_time_list[idx + 1][0]
-                energy_charge_sum = self.charging_energy_original - energy_charge_sum
-                self.charging_time += energy_charge_sum / energy_charge[idx]
-                return self.charging_time
-
-        self.charging_time = charging_time_list[0][0]
-        return self.charging_time
+    def get_time_charging(self, action, node):
+        energy = self.energy_max / 100 * action
+        time = energy / node.calE_charge_by_sensor(self, 1)
+        return time
 
     def update_energy_thresh(self):
         self.average_used = self.just_used_energy / 20
-        self.energy_thresh = self.average_used * 2000
-        # print("update_energy_thresh", self.energy_thresh)
+        self.energy_thresh_weight = min(self.average_used * 1000, self.energy_max*0.8)

@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 from scipy.spatial import distance
 
@@ -48,32 +50,55 @@ def find_receiver(node, net):
         id_min = np.argmin(d)
         return candidate[id_min]
     else:
+        # print("find_receiver", node.id, node.neighbor)
         return -1
 
 
-def request_function(node, network, mc, t):
+def request_function(node, mc, t):
     """
     add a message to request list of mc.
+    :param node: the node request
+    :param mc: mobile charger
+    :param t: time get request
+    :return: None
+    """
+    mc.list_request.append(
+        {"id": node.id, "energy": node.energy, "avg_energy": node.avg_energy, "energy_estimate": node.energy,
+         "time": t})
+
+
+def request_to_neighbor_function(node, network):
+    """
+    add a message to request list of mc. Gui request den cho cac sensor thoa man, sensor nhận được request sẽ set 1 time tick là 1 hàm tỉ lệ nghịch vs reward, timer nào trước thì sạc, con này khi đã được sạc thì k nhận từ con khác
     :param network:
     :param node: the node request
     :param mc: mobile charger
     :param t: time get request
     :return: None
     """
-    for sensor in network.node:
+    d0 = math.sqrt(para.EFS / para.EMP)
+
+    list_request =[]
+    for sensor in node.neighbor_charge:
         if sensor.id == node.id:
             continue
 
-        # if node.average_used < node.calE_charge_by_sensor(sensor):
-        # print("request_function", node.average_used, node.calE_charge_by_sensor(sensor))
-        if node not in sensor.list_request:
-            node.list_just_request.append(sensor)
-            # sensor.list_request.append(node)
-            # sensor.is_list_request_changed = True
+        if sensor.charging_time == para.sensor_no_charge and sensor.energy > sensor.energy_thresh_weight:
+            list_request.append(sensor)
 
-    mc.list_request.append(
-        {"id": node.id, "energy": node.energy, "avg_energy": node.avg_energy, "energy_estimate": node.energy,
-         "time": t})
+    if not list_request:
+        node.request_to_sensor = 50
+        return
+
+    sensor_charge = None
+    highest_point = -10000000
+    for sensor in list_request:
+        point = node.calE_charge_by_sensor(sensor)*sensor.optimizer.get_weight_change(node, network)
+        if point > highest_point:
+            sensor_charge = sensor
+            highest_point = point
+
+    sensor_charge.optimizer.update_charge(node)
 
 
 def estimate_average_energy(node):
