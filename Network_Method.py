@@ -9,11 +9,12 @@ def uniform_com_func(net):
     :return:
     """
     for node in net.node:
-        if node.id in net.target and random.random() <= node.prob and node.is_active:
+        if node.id in net.target and random.random() <= node.prob:
             package = Package()
-            node.send(net, package)
+            if node.is_active:
+                node.send(net, package)
             net.nb_pack += 1
-            if package.path[-1] == -1:
+            if len(package.path) and package.path[-1] == -1:
                 net.nb_pack_sent += 1
             # print(package.path)
     return True

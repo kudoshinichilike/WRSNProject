@@ -111,7 +111,7 @@ class Network:
         energy_log.close()
         return t
 
-    def simulate_max_time(self, optimizer=None, max_time=10**6, file_name="log/information_log.csv", nb_run = 0):
+    def simulate_max_time(self, optimizer=None, max_time=10**6, file_name="log/information_log.csv", index=0, nb_run = 0):
         """
         simulate process finish when current time is more than the max_time
         :param nb_run:
@@ -120,10 +120,10 @@ class Network:
         :param file_name:
         :return:
         """
-        file_name = "log/information_log" + str(nb_run) + ".csv"
+        file_name = "log/information_log" + str(index)+"_"+str(nb_run) + ".csv"
         print("simulate_max_time", file_name)
         information_log = open(file_name, "w")
-        writer = csv.DictWriter(information_log, fieldnames=["time", "nb dead", "nb package", "min E", "max E"])
+        writer = csv.DictWriter(information_log, fieldnames=["time", "nb dead", "nb package", "numpack", "min E", "max E"])
         writer.writeheader()
         nb_dead = 0
         nb_package = len(self.target)
@@ -134,10 +134,11 @@ class Network:
             current_dead = self.count_dead_node()
             current_package = self.nb_pack
 
-            print("simulate_max_time", t, "min E", self.node[self.find_min_node()].energy,
-                  "max E", self.node[self.find_max_node()].energy, "current_dead", current_dead,
-                  "current_package", self.nb_pack - self.nb_pack_sent)
+            # print("simulate_max_time", t, "min E", self.node[self.find_min_node()].energy,
+            #       "max E", self.node[self.find_max_node()].energy, "current_dead", current_dead,
+            #       "current_package", self.nb_pack - self.nb_pack_sent)
             writer.writerow({"time": t, "nb dead": nb_dead, "nb package": self.nb_pack - self.nb_pack_sent,
+                             "numpack": self.nb_pack,
                              "min E": self.node[self.find_min_node()].energy,
                              "max E": self.node[self.find_max_node()].energy})
 
@@ -151,7 +152,7 @@ class Network:
         information_log.close()
         return t
 
-    def simulate(self, optimizer=None, max_time=None, file_name="log/energy_log.csv", nb_run = 0):
+    def simulate(self, optimizer=None, max_time=None, file_name="log/energy_log.csv", index=0, nb_run = 0):
         """
         simulate in general. if max_time is not none, simulate_max_time will be called
         :param nb_run:
@@ -161,7 +162,7 @@ class Network:
         :return:
         """
         if max_time:
-            t = self.simulate_max_time(optimizer=optimizer, max_time=max_time, nb_run = nb_run)
+            t = self.simulate_max_time(optimizer=optimizer, max_time=max_time, index=index, nb_run = nb_run)
         else:
             t = self.simulate_lifetime(optimizer=optimizer)
         return t

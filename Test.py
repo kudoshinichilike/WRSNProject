@@ -55,13 +55,13 @@ import sys
 # except:
 #     max_time = None
 
-read_file = "thaydoisotarget"
+read_file = "thaydoivantocmc"
 write_file = "try"
 data_range = 5
 data_start = 0
 run_range = 1
-learning_rate = 0.01
-scale_factor = 0.9
+learning_rate = 0.5
+scale_factor = 0.5
 
 read_name = "data/" + read_file + ".csv"
 try:
@@ -69,12 +69,12 @@ try:
 except:
     opt = "qlearning"
 try:
-    max_time = 10000000
+    max_time = 6000000
 except:
     max_time = None
 
 df = pd.read_csv(read_name)
-for id_data in range(4, data_range):
+for id_data in range(0, data_range):
     index = id_data + data_start
     print("nb data = ", index)
     write_name = "log/" + write_file + str(index) + ".csv"
@@ -84,7 +84,7 @@ for id_data in range(4, data_range):
     life_time = []
     for nb_run in range(run_range):
         print("nb run = ", nb_run)
-        random.seed(run_range)
+        random.seed((index + nb_run)*3)
         node_pos = list(literal_eval(df.node_pos[index]))
         list_node = []
         for i in range(len(node_pos)):
@@ -95,15 +95,13 @@ for id_data in range(4, data_range):
             prob = df.freq[index]
             energy = energy_max
             node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
-                        energy_thresh=0.4 * energy_max, prob=prob)  # TODO: energy_thresh=0.4 * energy
-            # node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
-            #             energy_thresh=0.4 * energy, prob=prob)
+                        energy_thresh=0.4 * energy_max, prob=0.5)  # TODO: energy_thresh=0.4 * energy
             list_node.append(node)
         mc = MobileCharger(energy=df.E_mc[index], capacity=df.E_max[index], e_move=df.e_move[index],
                            e_self_charge=df.e_mc[index], velocity=df.velocity[index])
         target = [int(item) for item in df.target[index].split(',')]
         net = Network(list_node=list_node, mc=mc, target=target)
-        # print(len(net.node), len(net.target), max(net.target))
+        print(len(net.node), len(net.target), max(net.target))
         q_learning = Q_learning(alpha=learning_rate, gamma=scale_factor)
         inma = Inma()
         gsa = GSA()
@@ -116,7 +114,7 @@ for id_data in range(4, data_range):
         elif opt == "none":
             optimizer = None
         file_name = "log/q_learning_" + str(index) + ".csv"
-        temp = net.simulate(optimizer=optimizer, file_name=file_name, max_time=max_time, nb_run=nb_run)
+        temp = net.simulate(optimizer=optimizer, file_name=file_name, max_time=max_time, index=index, nb_run=nb_run)
         life_time.append(temp)
         result.writerow({"nb run": nb_run, "lifetime": temp})
         print("done run = ", nb_run)
