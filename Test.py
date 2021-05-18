@@ -56,14 +56,14 @@ df = pd.read_csv(read_name)
 for id_data in range(4, 5):
     index = id_data + data_start
     print("nb data rand = ", index)
-    for nb_run in range(4, 5):
+    for nb_run in range(6, 7):
         write_name = "log/test_" + str(index) + "_" + str(nb_run) + ".csv"
         open_file = open(write_name, "w")
         result = csv.DictWriter(open_file, fieldnames=["idx", "state0", "state1", "time"])
         result.writeheader()
 
         print("nb run = ", nb_run)
-        random.seed((index + nb_run)*7)
+        random.seed((index + 5)*7)
         node_pos = list(literal_eval(df.node_pos[index]))
         list_node = []
         list_optimizer_sensor = []
