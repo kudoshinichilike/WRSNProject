@@ -47,6 +47,11 @@ class Network:
                     queue.append(neighbor_id)
             queue.pop(0)
 
+        for sensor in self.node:
+            for neighbor_id in sensor.neighbor:
+                if self.node[neighbor_id].level < sensor.level:
+                    sensor.neighbor_low_level += 1
+
     def communicate(self, communicate_func=uniform_com_func):
         """
         communicate each time in network

@@ -25,6 +25,7 @@ class Node:
         self.len_cp = len_cp  # length of check point list
         self.id = id  # identify of sensor
         self.neighbor = []  # neighborhood of sensor
+        self.neighbor_low_level = 0 # neighborhood of sensor
         self.is_active = is_active  # statement of sensor. If sensor dead, state is False
         self.is_request = False  # if node requested, is_request = True
         self.level = 0  # the distance from node to base

@@ -20,9 +20,34 @@ def reward_function(sensor, network):
     weight_sensor = sensor.get_weight(network, all_path)
 
     if weight_sensor == 0:
-        reward = sensor.charging_to_sensor.get_weight(network, all_path)*sensor.charging_to_sensor.calE_charge_by_sensor(sensor, 1)
+        weight_sensor = 0.5
+    reward = sensor.charging_to_sensor.get_weight(network, all_path) / weight_sensor
+
+    rang_buoc_i = 0.5
+    if sensor.id in network.target:
+        rang_buoc_i = 1
+    for neighbor_id in sensor.neighbor:
+        neighbor = network.node[neighbor_id]
+        if neighbor.level > sensor.level and neighbor.is_active and neighbor.neighbor_low_level == 1:
+            rang_buoc_i += 1
+
+    rang_buoc_j = 0
+    for neighbor_id in sensor.charging_to_sensor.neighbor:
+        neighbor = network.node[neighbor_id]
+        if neighbor.level > sensor.charging_to_sensor.level and neighbor.is_active and neighbor.neighbor_low_level == 1:
+            rang_buoc_j += 1
+
+    # print("reward", reward)
+    reward += rang_buoc_j / rang_buoc_i
+    reward += sensor.charging_to_sensor.calE_charge_by_sensor(sensor, 1) *100
+
+    if sensor.average_used != 0:
+        reward += sensor.charging_to_sensor.average_used / sensor.average_used
+        # print(sensor.charging_to_sensor.average_used / sensor.average_used)
     else:
-        reward = (sensor.charging_to_sensor.get_weight(network, all_path) / weight_sensor)*sensor.charging_to_sensor.calE_charge_by_sensor(sensor, 1)
+        reward += sensor.charging_to_sensor.average_used * 10000
+
+    # print(rang_buoc_j / rang_buoc_i, sensor.charging_to_sensor.calE_charge_by_sensor(sensor, 1) * 10000)
 
     if sensor.get_lack_energy() > 0:
         reward -= sensor.get_lack_energy()

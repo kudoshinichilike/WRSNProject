@@ -93,7 +93,7 @@ def request_to_neighbor_function(node, network):
     sensor_charge = None
     highest_point = -10000000
     for sensor in list_request:
-        point = node.calE_charge_by_sensor(sensor)*sensor.optimizer.get_weight_change(node, network)
+        point = node.calE_charge_by_sensor(sensor)*100 + sensor.optimizer.get_weight_change(node, network)
         if point > highest_point:
             sensor_charge = sensor
             highest_point = point

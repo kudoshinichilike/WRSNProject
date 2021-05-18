@@ -59,6 +59,8 @@ class Q_LearningSensor:
         new_value_q = (1 - self.alpha) * self.q_table[self.state[0]][self.state[1]][self.action] + self.alpha * (reward + self.gamma * self.q_max(newState))
         self.q_table[self.state[0]][self.state[1]][self.action] = new_value_q
 
+        # print("set_reward id", self.sensor.id, "state", self.state, "action", self.action, "q_value", new_value_q)
+
         # reset chi so sau khi set reward
         self.sensor.charging_to_sensor.request_to_sensor = -1
         self.sensor.charging_to_sensor = None
@@ -90,7 +92,7 @@ class Q_LearningSensor:
         else:
             eps = 0.3
 
-        # eps = 1
+        eps = 1
 
         if random.uniform(0, 1) <= eps:
             residual_energy = self.sensor.get_residual_energy()
