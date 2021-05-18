@@ -10,14 +10,14 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="/data/thaydoisotarget.csv">
+        <entry key="/data/thaydoisonode.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
             </Attribute>
           </value>
         </entry>
-        <entry key="/log/information_log.csv">
+        <entry key="/data/thaydoisotarget.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
