@@ -82,7 +82,6 @@ def request_to_neighbor_function(node, network):
     for sensor in node.neighbor_charge:
         if sensor.id == node.id:
             continue
-
         if sensor.charging_time == para.sensor_no_charge and sensor.energy > sensor.energy_thresh_weight:
             list_request.append(sensor)
 
@@ -93,7 +92,7 @@ def request_to_neighbor_function(node, network):
     sensor_charge = None
     highest_point = -10000000
     for sensor in list_request:
-        point = node.calE_charge_by_sensor(sensor)*100 + sensor.optimizer.get_weight_change(node, network)
+        point = node.calE_charge_by_sensor(sensor)*10000 + sensor.get_weight_change(node, network)
         if point > highest_point:
             sensor_charge = sensor
             highest_point = point

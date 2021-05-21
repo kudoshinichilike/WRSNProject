@@ -1,8 +1,8 @@
-# alpha = 36.0
-alpha = 18.0
+alpha = 36.0
+# alpha = 18.0
 beta = 30.0
-# alpha_sensor = 36.0
-alpha_sensor = 18.0
+alpha_sensor = 36.0
+# alpha_sensor = 18.0
 beta_sensor = 30.0
 base = (500.0, 500.0)
 depot = (0.0, 0.0)
@@ -25,7 +25,8 @@ sensor_no_charge = -100
 epsilon = 0.1
 delta_charge = 0.0001
 
-charge_rate = 0.15
+charge_rate = 0.1
 al = 70
 be = 0.2
 
+time_expect = 2000

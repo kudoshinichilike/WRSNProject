@@ -53,17 +53,17 @@ except:
 #     max_time = None
 
 df = pd.read_csv(read_name)
-for id_data in range(4, 5):
+for id_data in range(0, 1):
     index = id_data + data_start
     print("nb data rand = ", index)
-    for nb_run in range(6, 7):
+    for nb_run in range(0, 1):
         write_name = "log/test_" + str(index) + "_" + str(nb_run) + ".csv"
         open_file = open(write_name, "w")
-        result = csv.DictWriter(open_file, fieldnames=["idx", "state0", "state1", "time"])
+        result = csv.DictWriter(open_file, fieldnames=["idx", "state0", "state1", "state2", "time"])
         result.writeheader()
 
         print("nb run = ", nb_run)
-        random.seed((index + 5)*7)
+        random.seed((index + nb_run))
         node_pos = list(literal_eval(df.node_pos[index]))
         list_node = []
         list_optimizer_sensor = []
@@ -71,11 +71,11 @@ for id_data in range(4, 5):
             location = node_pos[i]
             com_ran = df.commRange[index]
             energy = df.energy[index]
-            energy_max = 5.0
+            energy_max = 10.0
             prob = df.freq[index]
-            energy = 3.0
+            energy = 10.0
             node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
-                        energy_thresh=0.4 * energy_max, prob=0.6)  # TODO: energy_thresh=0.4 * energy
+                        energy_thresh=0.4 * energy_max, prob=0.3)
             list_node.append(node)
             q_sensor = Q_LearningSensor(sensor=list_node[i], alpha=learning_rate, gamma=scale_factor)
             list_optimizer_sensor.append(q_sensor)
@@ -109,9 +109,11 @@ for id_data in range(4, 5):
                             max_time=max_time, index=index, nb_run=nb_run)
 
         for sensor_optimizer in list_optimizer_sensor:
-            for state0 in range(0, 100):
-                for state1 in range(0, 100):
-                    result.writerow({"idx": sensor_optimizer.sensor.id, "state0": state0, "state1": state1, "time": sensor_optimizer.mark[state0][state1]})
+            for state0 in range(0, 101):
+                for state1 in range(0, 101):
+                    for state2 in range(0, 10):
+                        result.writerow({"idx": sensor_optimizer.sensor.id, "state0": state0, "state1": state1,
+                                         "state2": state2, "time": sensor_optimizer.mark[state0][state1][state2]})
 
         print("done run = ", nb_run)
 

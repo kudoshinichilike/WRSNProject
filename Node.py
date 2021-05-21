@@ -4,6 +4,7 @@ import numpy as np
 from scipy.spatial import distance
 
 import Parameter as para
+from Network_Method import get_all_path
 from Node_Method import to_string, find_receiver, request_function, estimate_average_energy, request_to_neighbor_function
 
 
@@ -256,11 +257,26 @@ class Node:
         self.energy -= charged_energy
         self.charged_energy += charged_energy
 
-    def get_time_charging(self, action, node):
-        energy = self.energy_max / 100 * action
-        time = energy / node.calE_charge_by_sensor(self, 1)
+    def get_time_charging(self, energy_share, node):
+        time = energy_share / node.calE_charge_by_sensor(self, 1)
         return time
 
     def update_energy_thresh(self):
         self.average_used = self.just_used_energy / 20
-        self.energy_thresh_weight = min(self.average_used * 1000, self.energy_max*0.8)
+        self.energy_thresh_weight = min(self.average_used * para.time_expect, self.energy_max*0.8)
+
+    def get_weight_change(self, node, network):
+        all_path = get_all_path(network)
+        weight_self = self.get_weight(network, all_path)
+        weight_node = node.get_weight(network, all_path)
+        if weight_self == 0:
+            weight_self = 0.5
+
+        weight_change = weight_node / weight_self
+
+        if self.average_used:
+            weight_change += node.average_used / self.average_used
+        else:
+            weight_change += node.average_used * 10000
+
+        return weight_change

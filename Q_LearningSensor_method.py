@@ -10,10 +10,12 @@ from Node_Method import find_receiver
 
 def reward_function(sensor, network):
     """
-    calculate reward function
+    calculate reward function bao gồm balance weight: đại diện cho weight hiện tại; balance average_used: đại diện cho
+    chệnh lệch năng lượng sử dụng ở hiện tại, con số này tương tự weight nhưng được lấy trung bình và ước lượng một
+    khoảng trước, gần đó; balance ràng buộc; thời gian sống của cụm; phạt trừ đi năng lượng thiếu của i
     :param sensor:
     :param network:
-    :param receive_func:
+    :param recemodelive_func:
     :return: reward
     """
     all_path = get_all_path(network)
@@ -39,18 +41,32 @@ def reward_function(sensor, network):
 
     # print("reward", reward)
     reward += rang_buoc_j / rang_buoc_i
-    reward += sensor.charging_to_sensor.calE_charge_by_sensor(sensor, 1) *100
 
     if sensor.average_used != 0:
         reward += sensor.charging_to_sensor.average_used / sensor.average_used
         # print(sensor.charging_to_sensor.average_used / sensor.average_used)
     else:
         reward += sensor.charging_to_sensor.average_used * 10000
+        # print("khong", sensor.charging_to_sensor.average_used * 10000)
 
-    # print(rang_buoc_j / rang_buoc_i, sensor.charging_to_sensor.calE_charge_by_sensor(sensor, 1) * 10000)
+    sum_energy_cluster = sensor.charging_to_sensor.energy
+    sum_everage_used_cluster = sensor.charging_to_sensor.average_used
+    for neighbor_id in sensor.neighbor:
+        neighbor = network.node[neighbor_id]
+        sum_energy_cluster += neighbor.energy
+        sum_everage_used_cluster += neighbor.average_used
+
+    time_life_cluster = sum_energy_cluster / sum_everage_used_cluster
+    time_life_min_cluster = sensor.charging_to_sensor.energy / sensor.charging_to_sensor.average_used
+    # print("time_life_min_cluster", (time_life_min_cluster + time_life_cluster)/500)
+    reward += (time_life_min_cluster + time_life_cluster)/1000
 
     if sensor.get_lack_energy() > 0:
-        reward -= sensor.get_lack_energy()
+        # print("phat")
+        reward -= sensor.get_lack_energy() * 10000
+
+    # print(rang_buoc_j / rang_buoc_i, sensor.charging_to_sensor.calE_charge_by_sensor(sensor, 1) * 10000,
+    #       sensor.get_lack_energy())
 
     return reward
 
@@ -61,15 +77,8 @@ def init_q_table_function():
     :param nb_action:
     :return:
     """
-    q_table = np.zeros((para.state_dimension1 + 2, para.state_dimension2 + 2, para.number_action + 2), dtype=float)
+    q_table = np.zeros((para.state_dimension1 + 2, para.state_dimension1 + 2, 12, para.number_action + 2), dtype=float)
     # for state_sensor in range (101):
     #         q_table[state_sensor][0][0] = 1000
 
     return q_table
-
-
-def calc_state_function(sensor):
-    percent_lack_sensitive_sensors = round(sensor.get_percent_lack_sensitive_sensors() / 2.0)
-    percent_residual_energy = round(sensor.get_percent_residual_energy() / 2.0)
-
-    return [percent_residual_energy, percent_lack_sensitive_sensors]
