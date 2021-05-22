@@ -56,14 +56,14 @@ df = pd.read_csv(read_name)
 for id_data in range(0, 1):
     index = id_data + data_start
     print("nb data rand = ", index)
-    for nb_run in range(0, 1):
+    for nb_run in range(11, 13):
         write_name = "log/test_" + str(index) + "_" + str(nb_run) + ".csv"
         open_file = open(write_name, "w")
         result = csv.DictWriter(open_file, fieldnames=["idx", "state0", "state1", "state2", "time"])
         result.writeheader()
 
         print("nb run = ", nb_run)
-        random.seed((index + nb_run +7))
+        random.seed(index + nb_run)
         node_pos = list(literal_eval(df.node_pos[index]))
         list_node = []
         list_optimizer_sensor = []
@@ -110,10 +110,9 @@ for id_data in range(0, 1):
 
         for sensor_optimizer in list_optimizer_sensor:
             for state0 in range(0, 101):
-                for state1 in range(0, 101):
-                    for state2 in range(0, 10):
-                        result.writerow({"idx": sensor_optimizer.sensor.id, "state0": state0, "state1": state1,
-                                         "state2": state2, "time": sensor_optimizer.mark[state0][state1][state2]})
+                for state2 in range(0, 10):
+                    result.writerow({"idx": sensor_optimizer.sensor.id, "state0": state0,
+                                 "state2": state2, "time": sensor_optimizer.mark[state0][state2]})
 
         print("done run = ", nb_run)
 

@@ -77,7 +77,7 @@ def init_q_table_function():
     :param nb_action:
     :return:
     """
-    q_table = np.zeros((para.state_dimension1 + 2, para.state_dimension1 + 2, 12, para.number_action + 2), dtype=float)
+    q_table = np.zeros((para.state_dimension1 + 2, 12, para.number_action + 2), dtype=float)
     # for state_sensor in range (101):
     #         q_table[state_sensor][0][0] = 1000
 
