@@ -63,7 +63,7 @@ for id_data in range(0, 1):
         result.writeheader()
 
         print("nb run = ", nb_run)
-        random.seed((index + nb_run))
+        random.seed((index + nb_run +7))
         node_pos = list(literal_eval(df.node_pos[index]))
         list_node = []
         list_optimizer_sensor = []
@@ -75,7 +75,7 @@ for id_data in range(0, 1):
             prob = df.freq[index]
             energy = 10.0
             node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
-                        energy_thresh=0.4 * energy_max, prob=0.3)
+                        energy_thresh=0.4 * energy_max, prob=0.5)
             list_node.append(node)
             q_sensor = Q_LearningSensor(sensor=list_node[i], alpha=learning_rate, gamma=scale_factor)
             list_optimizer_sensor.append(q_sensor)

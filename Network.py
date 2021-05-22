@@ -182,14 +182,14 @@ class Network:
             node_max_energy = self.node[self.find_max_node()]
             if t%1000 == 0:
                 print("simulate_max_time time", t, "min_energy", node_min_energy.id, node_min_energy.energy, "max_energy", node_max_energy.id, node_max_energy.energy, "current_dead", current_dead, "nb_pack", self.nb_pack-self.nb_pack_sent)
-                for sensor_optimizer in list_optimizer_sensor:
-                    for state0 in range(0, 101):
-                        for state1 in range(0, 101):
-                            for state2 in range(0, 10):
-                                if sensor_optimizer.mark[state0][state1][state2]!=0:
-                                    print("idx", sensor_optimizer.sensor.id, "state0", state0, "state1", state1,
-                                                 "state2", state2,
-                                                 "time", sensor_optimizer.mark[state0][state1][state2])
+                # for sensor_optimizer in list_optimizer_sensor:
+                #     for state0 in range(0, 101):
+                #         for state1 in range(0, 101):
+                #             for state2 in range(0, 10):
+                #                 if sensor_optimizer.mark[state0][state1][state2]!=0:
+                #                     print("idx", sensor_optimizer.sensor.id, "state0", state0, "state1", state1,
+                #                                  "state2", state2,
+                #                                  "time", sensor_optimizer.mark[state0][state1][state2])
 
             writer.writerow(
                 {"time": t, "mc location": self.mc.current, "mc energy": self.mc.energy, "min energy": node_min_energy.energy, "max energy": node_max_energy.energy, "max charge": self.node[self.find_max_node_charging()].charging_time, "nb_dead": current_dead, "nb_pack": self.nb_pack-self.nb_pack_sent, "number_pack": self.nb_pack})
