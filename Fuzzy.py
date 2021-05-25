@@ -4,20 +4,20 @@ import operator
 
 def min_E(avg):
     membership = {"l": 0, "m": 0, "h": 0}
-    if avg < 3:
+    if avg < 1.5:
         membership["l"] = 1
-    elif avg < 5:
-        membership["l"] = 0.5 * (5 - avg)
+    elif avg < 2.5:
+        membership["l"] = 0.5 * (2.5 - avg)
 
-    if 5 >= avg > 3:
-        membership["m"] = 0.5 * (avg - 3)
-    elif 7 >= avg > 5:
-        membership["m"] = 0.5 * (7 - avg)
+    if 2.5 >= avg > 1.5:
+        membership["m"] = 0.5 * (avg - 1.5)
+    elif 3.5 >= avg > 2.5:
+        membership["m"] = 0.5 * (3.5 - avg)
 
-    if avg > 7:
+    if avg > 3.5:
         membership["h"] = 1
-    elif 5 <= avg <= 7:
-        membership["h"] = 0.5 * (avg - 5)
+    elif 2.5 <= avg <= 3.5:
+        membership["h"] = 0.5 * (avg - 2.5)
 
     return membership
 
@@ -27,39 +27,39 @@ def p_e(pe):
     if pe < 0.1:
         membership["l"] = 1
     elif pe < 0.3:
-        membership["l"] = 5 * (0.3 - pe)
+        membership["l"] = 2.5 * (0.3 - pe)
 
     if pe > 0.5:
         membership["h"] = 1
     elif pe > 0.3:
-        membership["h"] = 5 * (pe - 0.3)
+        membership["h"] = 2.5 * (pe - 0.3)
 
     if 0.1 <= pe < 0.3:
-        membership["m"] = 5 * (pe - 0.1)
+        membership["m"] = 2.5 * (pe - 0.1)
     elif 0.3 <= pe <= 0.5:
-        membership["m"] = 5 * (0.5 - pe)
+        membership["m"] = 2.5 * (0.5 - pe)
 
     return membership
 
 
 def len_E(std):
     membership = {"l": 0, "m": 0, "h": 0}
-    if std <= 1:
+    if std <= 0.5:
         membership["l"] = 1
-    elif std <= 3:
-        membership["l"] = 0.5 * (3 - std)
+    elif std <= 1.5:
+        membership["l"] = 0.5 * (1.5 - std)
 
-    if std >= 6:
+    if std >= 3:
         membership["h"] = 1
-    elif std >= 4:
-        membership["h"] = 0.5 * (std - 4)
+    elif std >= 2:
+        membership["h"] = 0.5 * (std - 2)
 
-    if 1 <= std <= 3:
-        membership["m"] = 0.5 * (std - 1)
-    elif 3 <= std <= 4:
+    if 0.5 <= std <= 1.5:
+        membership["m"] = 0.5 * (std - 0.5)
+    elif 1.5 <= std <= 2:
         membership["m"] = 1
-    elif 4 <= std <= 6:
-        membership["m"] = 0.5 * (6 - std)
+    elif 2 <= std <= 3:
+        membership["m"] = 0.5 * (3 - std)
 
     return membership
 
