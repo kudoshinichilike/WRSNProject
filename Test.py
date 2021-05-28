@@ -83,19 +83,19 @@ for id_data in range(data_range):
     result.writeheader()
     life_time = []
     for nb_run in range(run_range):
-        print("nb run = ", nb_run)
-        random.seed(nb_run)
+        print("nb run = ", nb_run, "nd seed = ", (nb_run*10+id_data)*2)
+        random.seed((nb_run*10+id_data)*2)
         node_pos = list(literal_eval(df.node_pos[index]))
         list_node = []
         for i in range(len(node_pos)):
             location = node_pos[i]
             com_ran = df.commRange[index]
             energy = df.energy[index]
-            energy_max = df.energy[index]
+            energy_max = 5.0
             prob = df.freq[index]
             energy = energy_max
             node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
-                        energy_thresh=0.4 * energy_max, prob=prob)  # TODO: energy_thresh=0.4 * energy
+                        energy_thresh=0.4 * energy_max, prob=0.4)  # TODO: energy_thresh=0.4 * energy
             # node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
             #             energy_thresh=0.4 * energy, prob=prob)
             list_node.append(node)
