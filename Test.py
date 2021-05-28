@@ -53,16 +53,16 @@ except:
 #     max_time = None
 
 df = pd.read_csv(read_name)
-for id_data in range(1, 2):
+for id_data in range(2, 3):
     index = id_data + data_start
-    print("nb data rand = ", index)
-    for nb_run in range(24, 25):
+    print("nb data = ", index)
+    for nb_run in range(30, 31):
         write_name = "log/test_" + str(index) + "_" + str(nb_run) + ".csv"
         open_file = open(write_name, "w")
-        result = csv.DictWriter(open_file, fieldnames=["idx", "state0", "state1", "state2", "time"])
+        result = csv.DictWriter(open_file, fieldnames=["idx", "state0", "state2", "time"])
         result.writeheader()
 
-        print("nb run = ", nb_run)
+        print("nb run = ", nb_run, "nb seed = ", index + nb_run)
         random.seed(index + nb_run)
         node_pos = list(literal_eval(df.node_pos[index]))
         list_node = []
@@ -75,7 +75,7 @@ for id_data in range(1, 2):
             prob = df.freq[index]
             energy = 5.0
             node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
-                        energy_thresh=0.4 * energy_max, prob=0.5)
+                        energy_thresh=0.4 * energy_max, prob=0.45)
             list_node.append(node)
             q_sensor = Q_LearningSensor(sensor=list_node[i], alpha=learning_rate, gamma=scale_factor)
             list_optimizer_sensor.append(q_sensor)

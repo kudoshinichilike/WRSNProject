@@ -85,7 +85,7 @@ class Q_LearningSensor:
         else:
             eps = 0.3
 
-        eps = 1
+        # eps = 1
 
         if random.uniform(0, 1) <= eps:
             residual_energy_i = self.sensor.get_residual_energy()

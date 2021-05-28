@@ -11,7 +11,16 @@ def uniform_com_func(net):
     :param net:
     :return:
     """
+    if random.random() <= 0.1:
+        prob = 1
+    else:
+        prob = None
+
     for node in net.node:
+        prob_save = node.prob
+        if prob is not None:
+            node.prob = prob
+
         if node.id in net.target and random.random() <= node.prob:
             package = Package()
             if node.is_active:
@@ -20,6 +29,8 @@ def uniform_com_func(net):
             if len(package.path) and package.path[-1] == -1:
                 net.nb_pack_sent += 1
             # print(package.path)
+
+        node.prob = prob_save
     return True
 
 
