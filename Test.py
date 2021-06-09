@@ -1,5 +1,6 @@
 from scipy.spatial import distance
 
+import Parameter
 from Node import Node
 import random
 from Network import Network
@@ -23,8 +24,8 @@ data_start = 0
 run_range = 4
 learning_rate = 0.5
 scale_factor = 0.5
-learning_rate_sensor = 0.5
-scale_factor_sensor = 0.5
+learning_rate_sensor = 0.2
+scale_factor_sensor = 0.1
 read_name = "data/" + read_file + ".csv"
 try:
     opt = sys.argv[8]
@@ -53,10 +54,13 @@ except:
 #     max_time = None
 
 df = pd.read_csv(read_name)
-for id_data in range(2, 3):
+for id_data in range(4, 5):
     index = id_data + data_start
-    print("nb data = ", index)
-    for nb_run in range(30, 31):
+    print("nb data rand= ", index)
+    for nb_run in range(160, 161):
+        Parameter.charge_rate = Parameter.charge_rate_list[1]
+        print("charge_rate", Parameter.charge_rate)
+
         write_name = "log/test_" + str(index) + "_" + str(nb_run) + ".csv"
         open_file = open(write_name, "w")
         result = csv.DictWriter(open_file, fieldnames=["idx", "state0", "state2", "time"])
@@ -75,9 +79,9 @@ for id_data in range(2, 3):
             prob = df.freq[index]
             energy = 5.0
             node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
-                        energy_thresh=0.4 * energy_max, prob=0.45)
+                        energy_thresh=0.4 * energy_max, prob=1)
             list_node.append(node)
-            q_sensor = Q_LearningSensor(sensor=list_node[i], alpha=learning_rate, gamma=scale_factor)
+            q_sensor = Q_LearningSensor(sensor=list_node[i], alpha=learning_rate_sensor, gamma=scale_factor_sensor)
             list_optimizer_sensor.append(q_sensor)
             node.optimizer = q_sensor
 

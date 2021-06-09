@@ -7,7 +7,6 @@ import Fuzzy
 from Network_Method import get_all_path
 from Node_Method import find_receiver
 
-
 def reward_function(sensor, network):
     """
     calculate reward function bao gồm balance weight: đại diện cho weight hiện tại; balance average_used: đại diện cho

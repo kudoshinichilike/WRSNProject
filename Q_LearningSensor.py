@@ -78,12 +78,7 @@ class Q_LearningSensor:
         if self.sensor.get_residual_energy() <= 0:
             return [0, 0]
 
-        if self.mark[self.state[0]][self.state[1]] <= 5:
-            eps = 1
-        elif self.mark[self.state[0]][self.state[1]] <= 20:
-            eps = 0.5
-        else:
-            eps = 0.3
+        eps = (0.95**self.mark[self.state[0]][self.state[1]]) * para.learning_rate0
 
         # eps = 1
 

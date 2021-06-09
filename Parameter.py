@@ -25,8 +25,11 @@ sensor_no_charge = -100
 epsilon = 0.1
 delta_charge = 0.0001
 
-charge_rate = 0.1
+charge_rate_list = [1/5, 1/10, 1/15, 1/20, 1/25, 1/30, 0.0000000001]
+charge_rate = charge_rate_list[2]
 al = 70
 be = 0.2
 
 time_expect = 2000
+
+learning_rate0 = 0.8
