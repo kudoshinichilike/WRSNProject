@@ -14,7 +14,7 @@ def uniform_com_func(net):
             net.nb_pack += 1
             if node.energy > 0:
                 node.send(net, package)
-            if package.path[-1] == -1:
+            if len(package.path) and package.path[-1] == -1:
                 net.nb_pack_sent += 1
             # print(package.path)
     return True
