@@ -265,6 +265,10 @@ def get_charging_time(network=None, q_learning=None, state=None, alpha=0):
             if temp < energy_min:
                 nb_dead += 1
         dead_list.append(nb_dead)
+
+    if len(dead_list) == 0:
+        return 0
+
     arg_min = np.argmin(dead_list)
     min_time = [t[index] for index, item in enumerate(dead_list) if dead_list[arg_min] == item]
     # print("t = ", t)

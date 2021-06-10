@@ -134,9 +134,10 @@ class Network:
             current_dead = self.count_dead_node()
             current_package = self.nb_pack
 
-            # print("simulate_max_time", t, "min E", self.node[self.find_min_node()].energy,
-            #       "max E", self.node[self.find_max_node()].energy, "current_dead", current_dead,
-            #       "current_package", self.nb_pack - self.nb_pack_sent)
+            if t%1000 == 1:
+                print("simulate_max_time", t, "min E", self.node[self.find_min_node()].energy,
+                  "max E", self.node[self.find_max_node()].energy, "current_dead", current_dead,
+                  "current_package", self.nb_pack - self.nb_pack_sent)
             writer.writerow({"time": t, "nb dead": nb_dead, "nb package": self.nb_pack - self.nb_pack_sent,
                              "numpack": self.nb_pack,
                              "min E": self.node[self.find_min_node()].energy,

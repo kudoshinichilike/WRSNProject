@@ -55,13 +55,13 @@ import sys
 # except:
 #     max_time = None
 
-read_file = "thaydoisotarget"
+read_file = "thaydoisonode"
 write_file = "try"
-data_range = 4
-data_start = 2
+data_range = 5
+data_start = 0
 run_range = 3
-learning_rate = 0.01
-scale_factor = 0.9
+learning_rate = 0.5
+scale_factor = 0.5
 
 read_name = "data/" + read_file + ".csv"
 try:
@@ -74,7 +74,7 @@ except:
     max_time = None
 
 df = pd.read_csv(read_name)
-for id_data in range(data_range):
+for id_data in range(2, 3):
     index = id_data + data_start
     print("nb data = ", index)
     write_name = "log/" + write_file + str(index) + ".csv"
@@ -82,7 +82,7 @@ for id_data in range(data_range):
     result = csv.DictWriter(open_file, fieldnames=["nb run", "lifetime"])
     result.writeheader()
     life_time = []
-    for nb_run in range(run_range):
+    for nb_run in range(0,3):
         print("nb run = ", nb_run, "nd seed = ", (nb_run*10+id_data)*2)
         random.seed((nb_run*10+id_data)*2)
         node_pos = list(literal_eval(df.node_pos[index]))
@@ -95,7 +95,7 @@ for id_data in range(data_range):
             prob = df.freq[index]
             energy = energy_max
             node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
-                        energy_thresh=0.4 * energy_max, prob=0.4)  # TODO: energy_thresh=0.4 * energy
+                        energy_thresh=0.4 * energy_max, prob=1.0)  # TODO: energy_thresh=0.4 * energy
             # node = Node(location=location, com_ran=com_ran, energy=energy, energy_max=energy_max, id=i,
             #             energy_thresh=0.4 * energy, prob=prob)
             list_node.append(node)
@@ -103,7 +103,7 @@ for id_data in range(data_range):
                            e_self_charge=df.e_mc[index], velocity=df.velocity[index])
         target = [int(item) for item in df.target[index].split(',')]
         net = Network(list_node=list_node, mc=mc, target=target)
-        # print(len(net.node), len(net.target), max(net.target))
+        print(len(net.node), len(net.target), max(net.target))
         q_learning = Q_learning(alpha=learning_rate, gamma=scale_factor)
         inma = Inma()
         gsa = GSA()
